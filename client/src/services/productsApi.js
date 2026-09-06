@@ -90,6 +90,24 @@ export const productsApi = api.injectEndpoints({
         { type: 'Festival', id: 'ADMIN_LIST' },
       ],
     }),
+    searchPublicProducts: builder.query({
+      query: (arg) => {
+        if (typeof arg === 'string') {
+          return {
+            url: '/catalog/products/search',
+            params: { q: arg, limit: 8 },
+          };
+        }
+        return {
+          url: '/catalog/products/search',
+          params: {
+            q: arg?.q ?? '',
+            limit: arg?.limit ?? 8,
+          },
+        };
+      },
+      keepUnusedDataFor: 60,
+    }),
   }),
 });
 
@@ -97,6 +115,8 @@ export const {
   useGetPublicProductsQuery,
   useGetPublicProductByIdQuery,
   useGetFeaturedProductsQuery,
+  useSearchPublicProductsQuery,
+  useLazySearchPublicProductsQuery,
   useGetAdminProductsQuery,
   useGetAdminProductByIdQuery,
   useCreateProductMutation,

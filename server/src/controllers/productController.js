@@ -10,6 +10,7 @@ import {
   getFeaturedProducts,
   getPublicProductById,
   getPublicProducts,
+  searchPublicProducts,
   updateProduct,
 } from '../services/productService.js';
 
@@ -100,9 +101,25 @@ export const getPublicProductsHandler = catchAsync(async (req, res) => {
   const products = await getPublicProducts({
     categorySlug: req.query.category,
     isSubsidy: isSubsidy ? true : undefined,
+    search: req.query.search || req.query.q,
+    limit: req.query.limit,
+    page: req.query.page,
   });
 
   setPublicJsonCache(res, 30);
+  res.status(200).json({
+    success: true,
+    data: { products },
+  });
+});
+
+export const searchPublicProductsHandler = catchAsync(async (req, res) => {
+  const products = await searchPublicProducts({
+    q: req.query.q || req.query.search || '',
+    limit: req.query.limit,
+  });
+
+  setPublicJsonCache(res, 60);
   res.status(200).json({
     success: true,
     data: { products },

@@ -17,7 +17,18 @@ export default function VisitorTracker() {
     }
 
     lastTrackedPath.current = location.pathname;
-    recordSiteVisit();
+
+    const track = () => {
+      recordSiteVisit().catch(() => {});
+    };
+
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      const handle = window.requestIdleCallback(track, { timeout: 3000 });
+      return () => window.cancelIdleCallback(handle);
+    }
+
+    const timer = setTimeout(track, 1500);
+    return () => clearTimeout(timer);
   }, [location.pathname, recordSiteVisit]);
 
   return null;

@@ -7,13 +7,7 @@ import ProductShowcase from '@/components/home/ProductShowcase';
 import FeatureSection from '@/components/home/FeatureSection';
 import InstallationGallerySection from '@/components/home/InstallationGallerySection';
 import CorporateOfficeSection from '@/components/home/CorporateOfficeSection';
-import { useGetPublicHomepageBannersQuery } from '@/services/homepageBannerApi';
-import { useGetFeaturedProductsQuery } from '@/services/productsApi';
-
 export default function HomePage() {
-  useGetPublicHomepageBannersQuery();
-  useGetFeaturedProductsQuery();
-
   return (
     <>
       <Hero />

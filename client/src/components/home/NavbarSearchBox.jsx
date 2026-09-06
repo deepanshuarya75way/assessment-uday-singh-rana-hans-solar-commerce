@@ -1,12 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2, SearchX } from 'lucide-react';
 import ProductSearchInput from '@/components/shop/ProductSearchInput';
-import { useGetPublicProductsQuery } from '@/services/productsApi';
-import {
-  filterNavbarSearchSuggestions,
-  normalizeSearchQuery,
-} from '@/utils/productSearch';
+import { useSearchPublicProductsQuery } from '@/services/productsApi';
+import { normalizeSearchQuery } from '@/utils/productSearch';
 
 function NavbarSearchSuggestions({ results, isLoading, query, onSelect }) {
   return (
@@ -77,18 +74,35 @@ export default function NavbarSearchBox({
   onClose,
 }) {
   const [focused, setFocused] = useState(false);
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const containerRef = useRef(null);
-  const { data, isLoading } = useGetPublicProductsQuery();
-  const products = data?.data?.products ?? [];
+
   const isDesktop = variant === 'desktop';
   const normalizedQuery = normalizeSearchQuery(value);
   const isExpanded = isDesktop && (focused || normalizedQuery.length > 0);
   const showSuggestions = focused && normalizedQuery.length > 0;
 
-  const results = useMemo(
-    () => filterNavbarSearchSuggestions(products, value),
-    [products, value],
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(normalizedQuery);
+    }, normalizedQuery ? 200 : 0);
+
+    return () => clearTimeout(timer);
+  }, [normalizedQuery]);
+
+  const shouldFetch = showSuggestions && debouncedQuery.length > 0;
+
+  const {
+    data: searchData,
+    isLoading: searchLoading,
+    isFetching: searchFetching,
+  } = useSearchPublicProductsQuery(
+    { q: debouncedQuery, limit: 8 },
+    { skip: !shouldFetch },
   );
+
+  const results = shouldFetch ? (searchData?.data?.products ?? []) : [];
+  const isLoading = shouldFetch && (searchLoading || searchFetching);
 
   useEffect(() => {
     if (!focused) {

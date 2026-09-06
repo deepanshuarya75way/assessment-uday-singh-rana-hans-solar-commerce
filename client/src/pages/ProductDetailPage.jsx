@@ -75,7 +75,14 @@ export default function ProductDetailPage() {
   const { id } = useParams();
   const { openEnquiryModal } = useEnquiryModal();
   const { data, isLoading, isError } = useGetPublicProductByIdQuery(id);
-  const { data: catalogData } = useGetPublicProductsQuery();
+  const relatedFromApi = useMemo(
+    () => data?.data?.relatedProducts ?? [],
+    [data?.data?.relatedProducts],
+  );
+  const needsCatalogFallback = !isLoading && !isError && relatedFromApi.length === 0;
+  const { data: catalogData } = useGetPublicProductsQuery(undefined, {
+    skip: !needsCatalogFallback,
+  });
   const [recordProductView] = useRecordProductViewMutation();
   const trackedProductId = useRef('');
 
@@ -99,15 +106,13 @@ export default function ProductDetailPage() {
       return [];
     }
 
-    const relatedFromApi = data?.data?.relatedProducts ?? [];
-    const catalog = catalogData?.data?.products ?? [];
-
     if (relatedFromApi.length > 0) {
       return relatedFromApi.filter((item) => item.id !== product.id);
     }
 
+    const catalog = catalogData?.data?.products ?? [];
     return pickRelatedProducts(catalog, product);
-  }, [data, catalogData, product]);
+  }, [relatedFromApi, catalogData, product]);
 
   const images = product?.images ?? [];
   const specifications = product?.specifications

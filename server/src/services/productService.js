@@ -201,10 +201,68 @@ const formatProduct = (product, { includeCategory = true } = {}) => {
   return formatted;
 };
 
+const formatProductSummary = (product, { includeCategory = true } = {}) => {
+  const gstPricing = calculateGstPricing(
+    product.price,
+    product.gstEnabled,
+    product.gstPercentage,
+  );
+
+  const formatted = {
+    id: product.id,
+    name: product.name,
+    description: '', // Omitted from lists to reduce payload size significantly
+    price: product.price,
+    images: (product.images || []).map((image) =>
+      toAbsoluteMediaUrlForProduct(image, product.updatedAt),
+    ),
+    videoUrl: null,
+    categoryId: product.categoryId,
+    stock: product.stock,
+    specifications: product.specifications || {},
+    warranty: product.warranty,
+    isActive: product.isActive,
+    isTrending: product.isTrending,
+    isGovernmentSubsidy: Boolean(
+      product.isGovernmentSubsidy || product.isSubsidy,
+    ),
+    isSubsidy: Boolean(product.isSubsidy || product.isGovernmentSubsidy),
+    isOnSale: product.isOnSale ?? false,
+    saleDiscountPercent: product.saleDiscountPercent ?? null,
+    festivalId: product.festivalId ?? null,
+    gstEnabled: gstPricing.gstEnabled,
+    gstPercentage: gstPricing.gstPercentage,
+    gstAmount: gstPricing.gstAmount,
+    finalPrice: gstPricing.finalPrice,
+    createdAt: product.createdAt,
+    updatedAt: product.updatedAt,
+  };
+
+  if (includeCategory && product.category) {
+    formatted.category = {
+      id: product.category.id,
+      name: product.category.name,
+      slug: product.category.slug,
+    };
+  }
+
+  if (product.festival) {
+    formatted.festival = {
+      id: product.festival.id,
+      name: product.festival.name,
+    };
+  }
+
+  return formatted;
+};
+
 const formatPublicProduct = (product) => formatProduct(product);
 
 const formatPublicProducts = (products) =>
   products.map((product) => formatPublicProduct(product));
+
+const formatPublicProductsSummary = (products) =>
+  products.map((product) => formatProductSummary(product));
 
 export const productInclude = {
   category: {
@@ -215,9 +273,53 @@ export const productInclude = {
   },
 };
 
-export { formatProduct };
+export { formatProduct, formatProductSummary };
 
-export const getPublicProducts = async ({ categorySlug, isSubsidy } = {}) => {
+export const searchPublicProducts = async ({ q, limit = 8 } = {}) => {
+  const query = String(q || '').trim();
+  if (!query) {
+    return [];
+  }
+
+  const terms = query
+    .toLowerCase()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  const safeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const conditions = terms.map((term) => {
+    const escaped = safeRegex(term);
+    return {
+      OR: [
+        { name: { contains: escaped, mode: 'insensitive' } },
+        { category: { name: { contains: escaped, mode: 'insensitive' } } },
+        { category: { slug: { contains: escaped, mode: 'insensitive' } } },
+        { warranty: { contains: escaped, mode: 'insensitive' } },
+      ],
+    };
+  });
+
+  const products = await prisma.product.findMany({
+    where: {
+      isActive: true,
+      AND: conditions,
+    },
+    include: productInclude,
+    orderBy: [{ isTrending: 'desc' }, { updatedAt: 'desc' }],
+    take: Math.min(Math.max(Number(limit) || 8, 1), 50),
+  });
+
+  return formatPublicProductsSummary(products);
+};
+
+export const getPublicProducts = async ({
+  categorySlug,
+  isSubsidy,
+  search,
+  limit,
+  page,
+} = {}) => {
   const where = { isActive: true };
 
   if (categorySlug) {
@@ -231,13 +333,47 @@ export const getPublicProducts = async ({ categorySlug, isSubsidy } = {}) => {
     ];
   }
 
-  const products = await prisma.product.findMany({
+  if (search) {
+    const terms = String(search)
+      .trim()
+      .toLowerCase()
+      .split(/\s+/)
+      .filter(Boolean);
+
+    if (terms.length > 0) {
+      const safeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const conditions = terms.map((term) => {
+        const escaped = safeRegex(term);
+        return {
+          OR: [
+            { name: { contains: escaped, mode: 'insensitive' } },
+            { category: { name: { contains: escaped, mode: 'insensitive' } } },
+            { category: { slug: { contains: escaped, mode: 'insensitive' } } },
+          ],
+        };
+      });
+      where.AND = conditions;
+    }
+  }
+
+  const queryOptions = {
     where,
     include: productInclude,
     orderBy: { createdAt: 'desc' },
-  });
+  };
 
-  return formatPublicProducts(products);
+  const parsedLimit = Number(limit);
+  const parsedPage = Number(page);
+  if (Number.isFinite(parsedLimit) && parsedLimit > 0) {
+    queryOptions.take = parsedLimit;
+    if (Number.isFinite(parsedPage) && parsedPage > 1) {
+      queryOptions.skip = (parsedPage - 1) * parsedLimit;
+    }
+  }
+
+  const products = await prisma.product.findMany(queryOptions);
+
+  return formatPublicProductsSummary(products);
 };
 
 export const getFeaturedProducts = async () => {
@@ -249,6 +385,7 @@ export const getFeaturedProducts = async () => {
         where: { ...baseWhere, isTrending: true },
         include: productInclude,
         orderBy: { updatedAt: 'desc' },
+        take: 12,
       }),
       prisma.product.findMany({
         where: {
@@ -257,12 +394,13 @@ export const getFeaturedProducts = async () => {
         },
         include: productInclude,
         orderBy: { updatedAt: 'desc' },
+        take: 12,
       }),
     ]);
 
     return {
-      trendingProducts: formatPublicProducts(trendingProducts),
-      subsidyProducts: formatPublicProducts(subsidyProducts),
+      trendingProducts: formatPublicProductsSummary(trendingProducts),
+      subsidyProducts: formatPublicProductsSummary(subsidyProducts),
     };
   });
 };

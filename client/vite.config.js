@@ -17,4 +17,21 @@ export default defineConfig({
     port: 5173,
     strictPort: true,
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules/xlsx')) {
+            return 'vendor-xlsx';
+          }
+          if (
+            id.includes('node_modules/@tiptap') ||
+            id.includes('node_modules/prosemirror')
+          ) {
+            return 'vendor-tiptap';
+          }
+        },
+      },
+    },
+  },
 });
