@@ -5,6 +5,8 @@ export default function ProductSearchInput({
   onChange,
   onSubmit,
   onClear,
+  onFocus,
+  onBlur,
   placeholder = 'Search solar products...',
   className = '',
   inputClassName = '',
@@ -35,6 +37,8 @@ export default function ProductSearchInput({
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onFocus={onFocus}
+        onBlur={onBlur}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
         aria-label={placeholder}

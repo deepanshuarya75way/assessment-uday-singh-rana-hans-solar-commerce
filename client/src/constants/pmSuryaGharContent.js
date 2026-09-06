@@ -226,12 +226,15 @@ export const pmSuryaGharDisclaimer =
   'Subsidy amount, eligibility, technical requirements, net-metering provisions, documentation and other scheme conditions are subject to the latest Government of India/MNRE guidelines and applicable DISCOM/state regulations. Subsidy approval and disbursement are subject to fulfilment of the applicable requirements.';
 
 export const pmSuryaGharHomeCompany = {
-  brandName: 'HANS SOLAR ENERGY',
-  vendorLabel: 'PM Surya Ghar Authorized Vendor',
+  brandName: 'HANS SOLAR RENEWABLE ENERGY INDIA PVT. LTD.',
+  vendorScheme: 'PM Surya Ghar Yojana',
+  vendorBadge: 'AUTHORIZED VENDOR',
+  trustStat: '8,000+',
+  trustLabel: 'Families Trust HANS SOLAR Across Uttar Pradesh',
   youtubeUrl: 'https://www.youtube.com/@Gajendra_Singh_Rana',
   youtubeCtaLabel: 'Follow Our YouTube Channel',
   youtubePromoMessage:
-    'We regularly share solar updates, product insights, installation guidance and useful tips to help you make informed energy decisions.',
+    'Explore our solar installations, customer experiences, product insights and useful solar guidance.',
 };
 
 export const pmSuryaGharHomeSubsidyCards = [

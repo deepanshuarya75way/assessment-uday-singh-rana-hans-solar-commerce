@@ -26,20 +26,7 @@ export const getNormalProductPricing = (product) => {
   };
 };
 
-export const getFestivalProductPricing = (product, festivalDiscountPercent) => ({
-  originalPrice: product.price,
-  salePrice: getDiscountedPrice(product.price, festivalDiscountPercent),
-  discountPercent: festivalDiscountPercent,
-  type: 'festival',
-});
-
-export const getEffectiveProductPricing = (product) => {
-  if (product.activeFestivalDiscount) {
-    return getFestivalProductPricing(product, product.activeFestivalDiscount);
-  }
-
-  return getNormalProductPricing(product);
-};
+export const getEffectiveProductPricing = (product) => getNormalProductPricing(product);
 
 export const getAmountSaved = (pricing) =>
   pricing.discountPercent > 0 ? pricing.originalPrice - pricing.salePrice : 0;

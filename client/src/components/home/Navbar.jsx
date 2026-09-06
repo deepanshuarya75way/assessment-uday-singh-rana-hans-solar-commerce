@@ -15,7 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import ProductSearchInput from '@/components/shop/ProductSearchInput';
+import NavbarSearchBox from '@/components/home/NavbarSearchBox';
 import useProductSearch from '@/hooks/useProductSearch';
 import { contactInfo, navDropdowns, navLinks } from '@/constants/homeContent';
 import { useGetPublicCategoriesQuery } from '@/services/categoriesApi';
@@ -370,15 +370,14 @@ function DesktopNavbar({
                   ))}
                 </nav>
 
-                <ProductSearchInput
+                <NavbarSearchBox
                   id="navbar-product-search-desktop"
                   value={inputValue}
                   onChange={handleChange}
                   onSubmit={handleSubmit}
                   onClear={clearSearch}
-                  size="compact"
-                  placeholder="Search products..."
-                  className="ml-2 hidden w-44 xl:block 2xl:w-52"
+                  variant="desktop"
+                  className="ml-2 hidden self-center overflow-visible xl:block"
                 />
 
                 <Button
@@ -505,21 +504,18 @@ function MobileNavbar({
 
         <div
           className={`overflow-hidden border-t border-slate-100 transition-all duration-300 ease-out ${
-            searchOpen ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'
+            searchOpen ? 'max-h-[min(70vh,26rem)] opacity-100' : 'max-h-0 opacity-0'
           }`}
         >
           <div className="px-4 py-2.5">
-            <ProductSearchInput
+            <NavbarSearchBox
               id="navbar-product-search-mobile"
               value={inputValue}
               onChange={handleChange}
-              onSubmit={() => {
-                handleSubmit();
-                setSearchOpen(false);
-              }}
+              onSubmit={handleSubmit}
               onClear={clearSearch}
-              size="compact"
-              placeholder="Search products..."
+              variant="mobile"
+              onClose={() => setSearchOpen(false)}
             />
           </div>
         </div>

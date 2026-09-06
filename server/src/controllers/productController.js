@@ -64,15 +64,6 @@ const mapProductBody = (body, files) => {
       body.saleDiscountPercent === ''
         ? undefined
         : body.saleDiscountPercent,
-    festivalId:
-      body.festivalId === undefined || body.festivalId === ''
-        ? undefined
-        : body.festivalId,
-    festivalDiscountPercent:
-      body.festivalDiscountPercent === undefined ||
-      body.festivalDiscountPercent === ''
-        ? undefined
-        : body.festivalDiscountPercent,
     gstEnabled:
       body.gstEnabled === undefined
         ? undefined

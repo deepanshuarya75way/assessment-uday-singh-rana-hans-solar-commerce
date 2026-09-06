@@ -7,6 +7,11 @@ export const festivalsApi = api.injectEndpoints({
       providesTags: [{ type: 'Festival', id: 'ACTIVE' }],
       keepUnusedDataFor: 120,
     }),
+    getFestivalProducts: builder.query({
+      query: (id) => `/festivals/${id}/products`,
+      providesTags: (_result, _error, id) => [{ type: 'Festival', id: `PRODUCTS_${id}` }],
+      keepUnusedDataFor: 120,
+    }),
     getAdminFestivals: builder.query({
       query: () => '/admin/festivals',
       providesTags: (result) =>
@@ -102,6 +107,7 @@ export const festivalsApi = api.injectEndpoints({
 
 export const {
   useGetActiveFestivalQuery,
+  useGetFestivalProductsQuery,
   useGetAdminFestivalsQuery,
   useGetAdminFestivalByIdQuery,
   useCreateFestivalMutation,

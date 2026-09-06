@@ -63,7 +63,7 @@ export default function AdminFestivalsPage() {
     <div>
       <PageHeader
         title="Festival / Sale"
-        description="Create festival sales, assign products and set separate temporary discounts."
+        description="Create festival sales, assign products and manage schedules."
         action={
           <Link
             to="/admin/festivals/new"

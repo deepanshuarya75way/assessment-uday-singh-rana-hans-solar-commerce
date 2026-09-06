@@ -28,14 +28,29 @@ const legalLinks = [
   { label: 'Terms & Conditions', path: '/terms-and-conditions' },
 ];
 
-function FooterCollapsibleSection({ title, defaultOpen = false, children }) {
+function FooterCollapsibleSection({
+  title,
+  defaultOpen = false,
+  desktopCollapsible = false,
+  children,
+}) {
   const [open, setOpen] = useState(defaultOpen);
+
+  const contentClassName = desktopCollapsible
+    ? `overflow-hidden transition-all duration-300 ${
+        open ? 'max-h-[640px] opacity-100 lg:max-h-[520px]' : 'max-h-0 opacity-0'
+      }`
+    : `overflow-hidden transition-all duration-300 lg:block lg:max-h-none lg:opacity-100 ${
+        open ? 'max-h-[640px] opacity-100' : 'max-h-0 opacity-0 lg:max-h-none'
+      }`;
 
   return (
     <div className="border-b border-white/8 py-4 lg:border-b-0 lg:py-0">
       <button
         type="button"
-        className="flex min-h-[44px] w-full items-center justify-between text-left lg:pointer-events-none lg:min-h-0"
+        className={`flex min-h-[44px] w-full items-center justify-between text-left lg:min-h-0 ${
+          desktopCollapsible ? 'lg:cursor-pointer' : 'lg:pointer-events-none'
+        }`}
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
       >
@@ -43,15 +58,13 @@ function FooterCollapsibleSection({ title, defaultOpen = false, children }) {
           {title}
         </h3>
         <ChevronDown
-          className={`h-4 w-4 text-slate-500 transition-transform duration-200 lg:hidden ${open ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 shrink-0 text-slate-500 transition-transform duration-200 ${
+            desktopCollapsible ? '' : 'lg:hidden'
+          } ${open ? 'rotate-180' : ''}`}
           aria-hidden="true"
         />
       </button>
-      <div
-        className={`overflow-hidden transition-all duration-300 lg:block lg:max-h-none lg:opacity-100 ${
-          open ? 'max-h-[640px] opacity-100' : 'max-h-0 opacity-0 lg:max-h-none'
-        }`}
-      >
+      <div className={contentClassName}>
         <div className="pb-1 pt-3 lg:pb-0 lg:pt-4">{children}</div>
       </div>
     </div>
@@ -232,7 +245,7 @@ export default function Footer() {
           </div>
 
           <div className="lg:col-span-2">
-            <FooterCollapsibleSection title="Products">
+            <FooterCollapsibleSection title="Products" desktopCollapsible>
               <FooterCategories />
             </FooterCollapsibleSection>
           </div>

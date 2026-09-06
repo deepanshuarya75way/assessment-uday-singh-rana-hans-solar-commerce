@@ -4,10 +4,7 @@ import {
   deleteFestivalImageFile,
   persistUploadedImage,
 } from '../utils/fileUpload.js';
-import {
-  findActiveFestival,
-  getProductFestivalDiscount,
-} from './festivalPricingService.js';
+import { findActiveFestival } from './festivalPricingService.js';
 import { formatProduct, productInclude } from './productService.js';
 import { toAbsoluteMediaUrl } from '../utils/mediaUrl.js';
 
@@ -42,8 +39,8 @@ const formatFestival = (festival, { includeStatus = false, now = new Date() } = 
     imageUrl: toAbsoluteImageUrl(festival.imageUrl, festival.updatedAt),
     startsAt: festival.startsAt,
     endsAt: festival.endsAt,
-    discountPercent: festival.discountPercent ?? null,
     applyToAllProducts: festival.applyToAllProducts ?? false,
+    discountPercent: festival.discountPercent ?? null,
     isEnabled: festival.isEnabled,
     priority: festival.priority,
     createdAt: festival.createdAt,
@@ -71,20 +68,61 @@ const parseDateTime = (value, fieldName) => {
   return date;
 };
 
-const normalizeFestivalDiscount = (value) => {
-  const percent = Number(value);
-
-  if (!Number.isFinite(percent) || percent <= 0 || percent >= 100) {
-    throw new ApiError(400, 'Festival discount must be between 1 and 99 percent');
-  }
-
-  return percent;
-};
-
 const validateFestivalDates = (startsAt, endsAt) => {
   if (endsAt <= startsAt) {
     throw new ApiError(400, 'End date/time must be after start date/time');
   }
+};
+
+const parseDisplayDiscountPercent = (value, { allowUndefined = false } = {}) => {
+  if (value === undefined) {
+    return allowUndefined ? undefined : null;
+  }
+
+  if (value === null || value === '') {
+    return null;
+  }
+
+  const parsed = Number(value);
+
+  if (!Number.isFinite(parsed) || parsed < 1 || parsed > 99) {
+    throw new ApiError(400, 'Display discount must be between 1 and 99 percent');
+  }
+
+  return Math.round(parsed);
+};
+
+const getFestivalProductWhere = (festival) =>
+  festival.applyToAllProducts
+    ? { isActive: true }
+    : {
+        isActive: true,
+        festivalId: festival.id,
+      };
+
+export const getPublicFestivalProducts = async (festivalId) => {
+  const festival = await prisma.festival.findUnique({ where: { id: festivalId } });
+
+  if (!festival) {
+    throw new ApiError(404, 'Festival not found');
+  }
+
+  const now = new Date();
+
+  if (getFestivalStatus(festival, now) !== 'active') {
+    throw new ApiError(404, 'Festival is not currently active');
+  }
+
+  const products = await prisma.product.findMany({
+    where: getFestivalProductWhere(festival),
+    include: productInclude,
+    orderBy: { updatedAt: 'desc' },
+  });
+
+  return {
+    festival: formatFestival(festival, { includeStatus: true, now }),
+    products: products.map((product) => formatProduct(product)),
+  };
 };
 
 export const getPublicActiveFestival = async () => {
@@ -94,61 +132,19 @@ export const getPublicActiveFestival = async () => {
     return null;
   }
 
-  const productWhere = festival.applyToAllProducts
-    ? { isActive: true }
-    : {
-        isActive: true,
-        festivalId: festival.id,
-      };
-
   const products = await prisma.product.findMany({
-    where: productWhere,
+    where: getFestivalProductWhere(festival),
     include: productInclude,
     orderBy: { updatedAt: 'desc' },
   });
 
-  const effectiveDiscount =
-    festival.discountPercent ??
-    products.find(
-      (product) =>
-        product.festivalId === festival.id && product.festivalDiscountPercent,
-    )?.festivalDiscountPercent ??
-    null;
-
-  if (festival.applyToAllProducts && !effectiveDiscount) {
-    return null;
-  }
-
-  const festivalProducts = products
-    .map((product) => {
-      const discount = getProductFestivalDiscount(product, festival);
-
-      if (!discount) {
-        return null;
-      }
-
-      return {
-        ...formatProduct(product),
-        festivalDiscountPercent: discount,
-        activeFestivalDiscount: discount,
-        activeFestival: {
-          id: festival.id,
-          name: festival.name,
-        },
-      };
-    })
-    .filter(Boolean);
-
-  if (festivalProducts.length === 0) {
+  if (products.length === 0) {
     return null;
   }
 
   return {
-    festival: {
-      ...formatFestival(festival),
-      discountPercent: effectiveDiscount ?? festival.discountPercent,
-    },
-    products: festivalProducts,
+    festival: formatFestival(festival),
+    products: products.map((product) => formatProduct(product)),
   };
 };
 
@@ -196,8 +192,8 @@ export const createFestival = async ({
   description,
   startsAt,
   endsAt,
-  discountPercent,
   applyToAllProducts = false,
+  discountPercent,
   isEnabled = true,
   priority = 0,
   imageFile,
@@ -221,9 +217,9 @@ export const createFestival = async ({
   const parsedStartsAt = parseDateTime(startsAt, 'Start date/time');
   const parsedEndsAt = parseDateTime(endsAt, 'End date/time');
   validateFestivalDates(parsedStartsAt, parsedEndsAt);
-  const parsedDiscount = normalizeFestivalDiscount(discountPercent);
   const parsedApplyToAllProducts =
     applyToAllProducts === true || applyToAllProducts === 'true';
+  const parsedDiscountPercent = parseDisplayDiscountPercent(discountPercent);
 
   const uploadedImage = await persistUploadedImage(imageFile, 'festivals');
 
@@ -236,8 +232,8 @@ export const createFestival = async ({
       imagePublicId: uploadedImage.publicId,
       startsAt: parsedStartsAt,
       endsAt: parsedEndsAt,
-      discountPercent: parsedDiscount,
       applyToAllProducts: parsedApplyToAllProducts,
+      discountPercent: parsedDiscountPercent,
       isEnabled,
       priority: Number(priority) || 0,
     },
@@ -254,8 +250,8 @@ export const updateFestival = async (
     description,
     startsAt,
     endsAt,
-    discountPercent,
     applyToAllProducts,
+    discountPercent,
     isEnabled,
     priority,
     imageFile,
@@ -278,14 +274,14 @@ export const updateFestival = async (
 
   validateFestivalDates(parsedStartsAt, parsedEndsAt);
 
-  const parsedDiscount =
-    discountPercent !== undefined
-      ? normalizeFestivalDiscount(discountPercent)
-      : existingFestival.discountPercent;
   const parsedApplyToAllProducts =
     applyToAllProducts !== undefined
       ? applyToAllProducts === true || applyToAllProducts === 'true'
       : existingFestival.applyToAllProducts;
+  const parsedDiscountPercent =
+    discountPercent !== undefined
+      ? parseDisplayDiscountPercent(discountPercent)
+      : existingFestival.discountPercent;
 
   let imageUrl = existingFestival.imageUrl;
   let imagePublicId = existingFestival.imagePublicId;
@@ -308,9 +304,11 @@ export const updateFestival = async (
       ...(description !== undefined ? { description: description.trim() } : {}),
       startsAt: parsedStartsAt,
       endsAt: parsedEndsAt,
-      ...(discountPercent !== undefined ? { discountPercent: parsedDiscount } : {}),
       ...(applyToAllProducts !== undefined
         ? { applyToAllProducts: parsedApplyToAllProducts }
+        : {}),
+      ...(discountPercent !== undefined
+        ? { discountPercent: parsedDiscountPercent }
         : {}),
       ...(isEnabled !== undefined ? { isEnabled } : {}),
       ...(priority !== undefined ? { priority: Number(priority) || 0 } : {}),
@@ -324,7 +322,6 @@ export const updateFestival = async (
       where: { festivalId: id },
       data: {
         festivalId: null,
-        festivalDiscountPercent: null,
       },
     });
   }
@@ -343,7 +340,6 @@ export const deleteFestival = async (id) => {
     where: { festivalId: id },
     data: {
       festivalId: null,
-      festivalDiscountPercent: null,
     },
   });
 
@@ -364,17 +360,6 @@ export const assignFestivalProducts = async (festivalId, productIds = []) => {
     throw new ApiError(400, 'At least one product must be selected');
   }
 
-  const discount = festival.discountPercent
-    ? normalizeFestivalDiscount(festival.discountPercent)
-    : null;
-
-  if (!discount) {
-    throw new ApiError(
-      400,
-      'Festival discount must be configured before assigning products',
-    );
-  }
-
   const products = await prisma.product.findMany({
     where: { id: { in: productIds } },
   });
@@ -389,7 +374,6 @@ export const assignFestivalProducts = async (festivalId, productIds = []) => {
         where: { id: productId },
         data: {
           festivalId,
-          festivalDiscountPercent: discount,
         },
       }),
     ),
@@ -404,10 +388,7 @@ export const assignFestivalProducts = async (festivalId, productIds = []) => {
   return assignedProducts.map((product) => formatProduct(product));
 };
 
-export const assignFestivalProduct = async (
-  festivalId,
-  { productId, festivalDiscountPercent },
-) => {
+export const assignFestivalProduct = async (festivalId, { productId }) => {
   const festival = await prisma.festival.findUnique({ where: { id: festivalId } });
 
   if (!festival) {
@@ -420,49 +401,11 @@ export const assignFestivalProduct = async (
     throw new ApiError(404, 'Product not found');
   }
 
-  const discount = festivalDiscountPercent
-    ? normalizeFestivalDiscount(festivalDiscountPercent)
-    : festival.discountPercent
-      ? normalizeFestivalDiscount(festival.discountPercent)
-      : null;
-
-  if (!discount) {
-    throw new ApiError(
-      400,
-      'Festival discount must be configured before assigning products',
-    );
-  }
-
   const updatedProduct = await prisma.product.update({
     where: { id: productId },
     data: {
       festivalId,
-      festivalDiscountPercent: discount,
     },
-    include: productInclude,
-  });
-
-  return formatProduct(updatedProduct);
-};
-
-export const updateFestivalProductDiscount = async (
-  festivalId,
-  productId,
-  festivalDiscountPercent,
-) => {
-  const product = await prisma.product.findFirst({
-    where: { id: productId, festivalId },
-  });
-
-  if (!product) {
-    throw new ApiError(404, 'Product is not assigned to this festival');
-  }
-
-  const discount = normalizeFestivalDiscount(festivalDiscountPercent);
-
-  const updatedProduct = await prisma.product.update({
-    where: { id: productId },
-    data: { festivalDiscountPercent: discount },
     include: productInclude,
   });
 
@@ -482,7 +425,6 @@ export const removeFestivalProduct = async (festivalId, productId) => {
     where: { id: productId },
     data: {
       festivalId: null,
-      festivalDiscountPercent: null,
     },
     include: productInclude,
   });

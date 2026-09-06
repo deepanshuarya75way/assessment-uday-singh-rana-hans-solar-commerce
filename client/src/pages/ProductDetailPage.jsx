@@ -1,4 +1,4 @@
-import { useLayoutEffect, useMemo, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -13,6 +13,7 @@ import RelatedProductsSection from '@/components/shop/RelatedProductsSection';
 import { ProductDetailBadges } from '@/components/shop/ProductBadges';
 import { ProductVideosSection } from '@/components/shop/ProductVideo';
 import { useEnquiryModal } from '@/context/EnquiryModalContext';
+import { useRecordProductViewMutation } from '@/services/analyticsApi';
 import {
   useGetPublicProductByIdQuery,
   useGetPublicProductsQuery,
@@ -26,44 +27,46 @@ function ProductDetailMediaGallery({ product, images }) {
 
   return (
     <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm sm:rounded-2xl lg:shadow-md">
-      <div className="aspect-square max-h-[min(72vw,420px)] bg-gray-100 sm:max-h-none lg:max-h-[min(56vh,520px)]">
-        {activeImage ? (
-          <img
-            src={activeImage}
-            alt={product.name}
-            className="h-full w-full object-contain sm:object-cover lg:object-contain"
-          />
-        ) : (
-          <div className="flex h-full min-h-[220px] items-center justify-center text-sm text-gray-400">
-            No image available
+      <div className="flex flex-col lg:flex-row">
+        <div className="order-1 aspect-square max-h-[min(72vw,420px)] bg-gray-100 sm:max-h-none lg:order-2 lg:max-h-[min(56vh,520px)] lg:min-w-0 lg:flex-1">
+          {activeImage ? (
+            <img
+              src={activeImage}
+              alt={product.name}
+              className="h-full w-full object-contain sm:object-cover lg:object-contain"
+            />
+          ) : (
+            <div className="flex h-full min-h-[220px] items-center justify-center text-sm text-gray-400">
+              No image available
+            </div>
+          )}
+        </div>
+
+        {images.length > 1 && (
+          <div className="order-2 grid grid-cols-4 gap-2 border-t border-gray-100 p-2.5 sm:grid-cols-5 sm:p-3 lg:order-1 lg:flex lg:max-h-[min(56vh,520px)] lg:w-[4.5rem] lg:flex-shrink-0 lg:flex-col lg:gap-2 lg:overflow-y-auto lg:border-r lg:border-t-0 lg:p-2.5 xl:w-20 xl:p-3">
+            {images.map((image, index) => (
+              <button
+                key={`${image}-${index}`}
+                type="button"
+                onClick={() => setActiveImageIndex(index)}
+                aria-label={`Show image ${index + 1}`}
+                aria-pressed={activeImageIndex === index}
+                className={`aspect-square min-h-[44px] overflow-hidden rounded-lg border-2 transition lg:min-h-0 lg:w-full ${
+                  activeImageIndex === index
+                    ? 'border-solar-600 ring-2 ring-solar-100'
+                    : 'border-transparent hover:border-gray-200'
+                }`}
+              >
+                <img
+                  src={image}
+                  alt={`${product.name} view ${index + 1}`}
+                  className="h-full w-full object-cover"
+                />
+              </button>
+            ))}
           </div>
         )}
       </div>
-
-      {images.length > 1 && (
-        <div className="grid grid-cols-4 gap-2 border-t border-gray-100 p-2.5 sm:grid-cols-5 sm:p-3 lg:grid-cols-4 xl:grid-cols-5">
-          {images.map((image, index) => (
-            <button
-              key={`${image}-${index}`}
-              type="button"
-              onClick={() => setActiveImageIndex(index)}
-              aria-label={`Show image ${index + 1}`}
-              aria-pressed={activeImageIndex === index}
-              className={`aspect-square min-h-[44px] overflow-hidden rounded-lg border-2 transition ${
-                activeImageIndex === index
-                  ? 'border-solar-600 ring-2 ring-solar-100'
-                  : 'border-transparent hover:border-gray-200'
-              }`}
-            >
-              <img
-                src={image}
-                alt={`${product.name} view ${index + 1}`}
-                className="h-full w-full object-cover"
-              />
-            </button>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -73,12 +76,23 @@ export default function ProductDetailPage() {
   const { openEnquiryModal } = useEnquiryModal();
   const { data, isLoading, isError } = useGetPublicProductByIdQuery(id);
   const { data: catalogData } = useGetPublicProductsQuery();
+  const [recordProductView] = useRecordProductViewMutation();
+  const trackedProductId = useRef('');
 
   const product = data?.data?.product;
 
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [id]);
+
+  useEffect(() => {
+    if (!product?.id || trackedProductId.current === product.id) {
+      return;
+    }
+
+    trackedProductId.current = product.id;
+    recordProductView(product.id);
+  }, [product?.id, recordProductView]);
 
   const recommendations = useMemo(() => {
     if (!product) {

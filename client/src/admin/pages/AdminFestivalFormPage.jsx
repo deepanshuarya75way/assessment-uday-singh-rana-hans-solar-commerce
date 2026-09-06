@@ -45,8 +45,8 @@ const getDefaultCreateForm = () => ({
   endsAt: getDefaultDateTimeLocal(
     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
   ),
-  discountPercent: '',
   productSelectionMode: 'all',
+  discountPercent: '',
   isEnabled: true,
   priority: '0',
 });
@@ -98,8 +98,11 @@ export default function AdminFestivalFormPage() {
       description: festival.description,
       startsAt: toDateTimeLocalValue(festival.startsAt),
       endsAt: toDateTimeLocalValue(festival.endsAt),
-      discountPercent: String(festival.discountPercent ?? ''),
       productSelectionMode: festival.applyToAllProducts ? 'all' : 'specific',
+      discountPercent:
+        festival.discountPercent != null && festival.discountPercent > 0
+          ? String(festival.discountPercent)
+          : '',
       isEnabled: festival.isEnabled,
       priority: String(festival.priority ?? 0),
     });
@@ -197,11 +200,6 @@ export default function AdminFestivalFormPage() {
       nextErrors.endsAt = 'End must be after start';
     }
 
-    const discount = Number(form.discountPercent);
-    if (!Number.isFinite(discount) || discount <= 0 || discount >= 100) {
-      nextErrors.discountPercent = 'Festival discount must be between 1 and 99';
-    }
-
     if (!isEditing && !imageFile) {
       nextErrors.image = 'Festival artwork is required';
     }
@@ -211,8 +209,30 @@ export default function AdminFestivalFormPage() {
         'Select at least one product or choose All Products';
     }
 
+    if (form.discountPercent !== '') {
+      const parsedDiscount = Number(form.discountPercent);
+
+      if (!Number.isFinite(parsedDiscount) || parsedDiscount < 1 || parsedDiscount > 99) {
+        nextErrors.discountPercent = 'Display discount must be between 1 and 99';
+      }
+    }
+
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
+  };
+
+  const syncDiscountFromFestival = (savedFestival) => {
+    if (!savedFestival) {
+      return;
+    }
+
+    setForm((current) => ({
+      ...current,
+      discountPercent:
+        savedFestival.discountPercent != null && savedFestival.discountPercent > 0
+          ? String(savedFestival.discountPercent)
+          : '',
+    }));
   };
 
   const buildFormData = () => {
@@ -229,13 +249,13 @@ export default function AdminFestivalFormPage() {
     formData.append('description', form.description.trim());
     formData.append('startsAt', startsAtValue.toISOString());
     formData.append('endsAt', endsAtValue.toISOString());
-    formData.append('discountPercent', form.discountPercent);
     formData.append(
       'applyToAllProducts',
       String(form.productSelectionMode === 'all'),
     );
     formData.append('isEnabled', String(form.isEnabled));
     formData.append('priority', form.priority || '0');
+    formData.append('discountPercent', form.discountPercent.trim());
 
     if (imageFile) {
       formData.append('image', imageFile);
@@ -255,7 +275,8 @@ export default function AdminFestivalFormPage() {
 
     try {
       if (isEditing) {
-        await updateFestival({ id, formData: buildFormData() }).unwrap();
+        const result = await updateFestival({ id, formData: buildFormData() }).unwrap();
+        syncDiscountFromFestival(result?.data?.festival);
 
         if (isSpecificMode) {
           const assignedIds = (festival?.products ?? []).map((product) => product.id);
@@ -326,7 +347,7 @@ export default function AdminFestivalFormPage() {
     <div>
       <PageHeader
         title={isEditing ? 'Edit Festival / Sale' : 'Create Festival / Sale'}
-        description="Set festival details, discount, product scope and schedule."
+        description="Set festival details, product scope and schedule."
         action={
           <Link
             to="/admin/festivals"
@@ -383,27 +404,6 @@ export default function AdminFestivalFormPage() {
               placeholder="Diwali Solar Sale is Live"
             />
             {errors.title && <p className="mt-1 text-xs text-red-600">{errors.title}</p>}
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-700">
-              Festival Discount (%) *
-            </label>
-            <input
-              type="number"
-              min="1"
-              max="99"
-              value={form.discountPercent}
-              onChange={(event) => updateField('discountPercent', event.target.value)}
-              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
-              placeholder="20"
-            />
-            <p className="mt-1 text-xs text-slate-500">
-              Applied from each product&apos;s original price across the website.
-            </p>
-            {errors.discountPercent && (
-              <p className="mt-1 text-xs text-red-600">{errors.discountPercent}</p>
-            )}
           </div>
 
           <div className="lg:col-span-2">
@@ -538,6 +538,28 @@ export default function AdminFestivalFormPage() {
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-slate-700">
+              Display Discount (%)
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="99"
+              value={form.discountPercent}
+              onChange={(event) => updateField('discountPercent', event.target.value)}
+              className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-amber-400 focus:ring-2 focus:ring-amber-100"
+              placeholder="e.g. 65"
+            />
+            <p className="mt-1 text-xs text-slate-500">
+              Promotional display only for the festival section. Does not change
+              product prices.
+            </p>
+            {errors.discountPercent && (
+              <p className="mt-1 text-xs text-red-600">{errors.discountPercent}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-700">
               Priority
             </label>
             <input
@@ -630,9 +652,9 @@ export default function AdminFestivalFormPage() {
         <section className="mt-8 rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-sm text-emerald-800">
           <h3 className="font-semibold text-emerald-900">All Products Selected</h3>
           <p className="mt-2">
-            Every active product in your catalog will appear in the festival section and
-            receive the {form.discountPercent || festival?.discountPercent || '—'}%
-            festival discount while this sale is active.
+            Every active product in your catalog will appear in the festival section
+            while this sale is active. Product discounts come from each
+            product&apos;s On Sale settings.
           </p>
         </section>
       )}

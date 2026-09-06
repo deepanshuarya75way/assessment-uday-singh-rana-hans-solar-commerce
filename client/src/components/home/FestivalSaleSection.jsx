@@ -10,15 +10,12 @@ import { useGetActiveFestivalQuery } from '@/services/festivalsApi';
 import {
   formatCurrency,
   getAmountSaved,
-  getFestivalProductPricing,
+  getEffectiveProductPricing,
 } from '@/utils/format';
 
 function FestivalProductCard({ product, onViewDetails, imagePriority = false }) {
   const imageUrl = product.images?.[0] || '';
-  const pricing = getFestivalProductPricing(
-    product,
-    product.festivalDiscountPercent,
-  );
+  const pricing = getEffectiveProductPricing(product);
   const amountSaved = getAmountSaved(pricing);
 
   return (
@@ -51,7 +48,6 @@ function FestivalProductCard({ product, onViewDetails, imagePriority = false }) 
           <div className="absolute left-3 top-3 z-10">
             <ProductSaleBadge
               saleDiscountPercent={pricing.discountPercent}
-              label="Festival Sale"
             />
           </div>
         )}
@@ -149,10 +145,10 @@ export default function FestivalSaleSection() {
     return null;
   }
 
-  const maxDiscount = Math.max(
-    ...products.map((product) => product.festivalDiscountPercent || 0),
-    festival.discountPercent || 0,
-  );
+  const festivalDisplayDiscount =
+    festival.discountPercent != null && festival.discountPercent > 0
+      ? Math.round(Number(festival.discountPercent))
+      : 0;
 
   return (
     <>
@@ -183,7 +179,7 @@ export default function FestivalSaleSection() {
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-solar-100 backdrop-blur-sm">
                 <Sparkles className="h-3.5 w-3.5 text-solar-300" />
-                {festival.name} Festival Sale
+                {festival.name}
               </span>
             </div>
 
@@ -197,10 +193,10 @@ export default function FestivalSaleSection() {
                 </p>
 
                 <div className="mt-6 flex flex-wrap gap-3">
-                  {maxDiscount > 0 && (
+                  {festivalDisplayDiscount > 0 && (
                     <div className="inline-flex items-center gap-2 rounded-xl border border-emerald-400/30 bg-emerald-500/10 px-4 py-2.5 text-sm font-semibold text-emerald-100">
                       <Tag className="h-4 w-4 text-emerald-300" />
-                      Up to {maxDiscount}% off selected solar products
+                      Up to {festivalDisplayDiscount}% off selected solar products
                     </div>
                   )}
                   <div className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-medium text-gray-200">
@@ -220,7 +216,7 @@ export default function FestivalSaleSection() {
                 </div>
 
                 <Button
-                  to="/shop"
+                  to={`/shop?festival=${festival.id}`}
                   size="lg"
                   className="mt-8 shadow-xl shadow-solar-600/30"
                 >
@@ -247,13 +243,13 @@ export default function FestivalSaleSection() {
                     </div>
                   )}
 
-                  {maxDiscount > 0 && (
+                  {festivalDisplayDiscount > 0 && (
                     <div className="absolute bottom-5 left-5 rounded-2xl bg-white px-4 py-3 shadow-xl">
                       <p className="text-[10px] font-bold uppercase tracking-wider text-solar-600">
-                        Festival Offer
+                        {festival.name}
                       </p>
                       <p className="text-2xl font-black text-charcoal">
-                        {maxDiscount}%
+                        {festivalDisplayDiscount}%
                         <span className="ml-1 text-sm font-bold text-emerald-600">
                           OFF
                         </span>
@@ -284,7 +280,7 @@ export default function FestivalSaleSection() {
                     </p>
                   </div>
                   <Link
-                    to="/shop"
+                    to={`/shop?festival=${festival.id}`}
                     className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border border-solar-200 bg-solar-50 px-4 py-2 text-sm font-semibold text-solar-800 transition hover:border-solar-300 hover:bg-solar-100 sm:self-auto"
                   >
                     View all deals
@@ -307,14 +303,6 @@ export default function FestivalSaleSection() {
 
       <ProductQuickViewModal
         product={quickViewProduct}
-        festivalPricing={
-          quickViewProduct
-            ? {
-                discountPercent: quickViewProduct.festivalDiscountPercent,
-                festivalName: festival.name,
-              }
-            : null
-        }
         onClose={() => setQuickViewProduct(null)}
       />
 

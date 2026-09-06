@@ -118,6 +118,11 @@ export const aboutUsVideo = {
   youtubeId: 'A-RxdvNk2cE',
   url: 'https://youtu.be/A-RxdvNk2cE?si=j7wKNYcN7dcMYfhi',
   title: 'HANS Solar company overview',
+  channelUrl: 'https://www.youtube.com/@Gajendra_Singh_Rana',
+  sectionTitle: 'Watch HANS SOLAR in Action',
+  sectionDescription:
+    'Explore our solar installations, customer experiences, product insights and useful solar guidance.',
+  ctaLabel: 'Watch on YouTube',
 };
 
 export const aboutUsContent = {

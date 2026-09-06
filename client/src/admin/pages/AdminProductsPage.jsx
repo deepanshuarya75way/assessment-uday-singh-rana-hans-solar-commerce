@@ -94,6 +94,9 @@ export default function AdminProductsPage() {
                     Stock
                   </th>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Unique Visitors
+                  </th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                     Status
                   </th>
                   <th className="px-5 py-3 text-right text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -130,6 +133,9 @@ export default function AdminProductsPage() {
                     </td>
                     <td className="px-5 py-4 text-sm text-slate-600">
                       {product.stock}
+                    </td>
+                    <td className="px-5 py-4 text-sm text-slate-600">
+                      {product.uniqueVisitorCount ?? 0}
                     </td>
                     <td className="px-5 py-4">
                       <StatusBadge active={product.isActive} />

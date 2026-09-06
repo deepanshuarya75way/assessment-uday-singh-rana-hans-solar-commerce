@@ -8,12 +8,10 @@ import { lockBodyScroll, unlockBodyScroll } from '@/utils/bodyScrollLock';
 import {
   formatCurrency,
   getEffectiveProductPricing,
-  getFestivalProductPricing,
 } from '@/utils/format';
 
 export default function ProductQuickViewModal({
   product,
-  festivalPricing,
   onClose,
 }) {
   useEffect(() => {
@@ -42,17 +40,7 @@ export default function ProductQuickViewModal({
   }
 
   const imageUrl = product.images?.[0] || '';
-  const pricing = festivalPricing
-    ? getFestivalProductPricing(product, festivalPricing.discountPercent)
-    : getEffectiveProductPricing(product);
-  const resolvedFestivalPricing =
-    festivalPricing ||
-    (product.activeFestivalDiscount
-      ? {
-          discountPercent: product.activeFestivalDiscount,
-          festivalName: product.activeFestival?.name,
-        }
-      : null);
+  const pricing = getEffectiveProductPricing(product);
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6">
@@ -90,10 +78,7 @@ export default function ProductQuickViewModal({
               No image
             </div>
           )}
-          <ProductCardBadges
-            product={product}
-            festivalPricing={resolvedFestivalPricing}
-          />
+          <ProductCardBadges product={product} />
         </div>
 
         <div className="p-6 sm:p-8">

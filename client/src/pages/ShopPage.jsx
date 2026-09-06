@@ -12,6 +12,7 @@ import ProductCard from '@/components/shop/ProductCard';
 import ProductSearchInput from '@/components/shop/ProductSearchInput';
 import useProductSearch from '@/hooks/useProductSearch';
 import { useGetPublicCategoriesQuery } from '@/services/categoriesApi';
+import { useGetFestivalProductsQuery } from '@/services/festivalsApi';
 import { useGetPublicProductsQuery } from '@/services/productsApi';
 import { filterProductsBySearch, normalizeSearchQuery } from '@/utils/productSearch';
 
@@ -38,6 +39,8 @@ function ShopStateCard({ children, className = '' }) {
 export default function ShopPage() {
   const { category: categorySlug } = useParams();
   const [searchParams] = useSearchParams();
+  const festivalId = searchParams.get('festival');
+  const isFestivalMode = Boolean(festivalId);
   const {
     query: searchQuery,
     inputValue,
@@ -50,10 +53,19 @@ export default function ShopPage() {
   const { data: categoriesData, isLoading: categoriesLoading } =
     useGetPublicCategoriesQuery();
   const {
+    data: festivalData,
+    isLoading: festivalLoading,
+    isError: festivalError,
+  } = useGetFestivalProductsQuery(festivalId, {
+    skip: !isFestivalMode,
+  });
+  const {
     data: productsData,
     isLoading: productsLoading,
-    isError,
-  } = useGetPublicProductsQuery(hasQuery ? undefined : categorySlug);
+    isError: productsError,
+  } = useGetPublicProductsQuery(hasQuery || isFestivalMode ? undefined : categorySlug, {
+    skip: isFestivalMode,
+  });
 
   const activeCategory = useMemo(
     () =>
@@ -63,7 +75,10 @@ export default function ShopPage() {
     [categoriesData, categorySlug],
   );
 
-  const allProducts = productsData?.data?.products ?? [];
+  const festival = festivalData?.data?.festival;
+  const allProducts = isFestivalMode
+    ? (festivalData?.data?.products ?? [])
+    : (productsData?.data?.products ?? []);
 
   const filteredProducts = useMemo(
     () => filterProductsBySearch(allProducts, searchQuery),
@@ -72,19 +87,25 @@ export default function ShopPage() {
 
   const categories = categoriesData?.data?.categories ?? [];
 
-  const isLoading = categoriesLoading || productsLoading;
+  const isLoading = isFestivalMode
+    ? festivalLoading
+    : categoriesLoading || productsLoading;
+  const isError = isFestivalMode ? festivalError : productsError;
   const normalizedSearch = normalizeSearchQuery(searchQuery);
 
-  const pageTitle = hasQuery
-    ? 'Search Results'
-    : activeCategory
-      ? activeCategory.name
-      : 'All Products';
+  const pageTitle = isFestivalMode
+    ? festival?.name || 'Festival Deals'
+    : hasQuery
+      ? 'Search Results'
+      : activeCategory
+        ? activeCategory.name
+        : 'All Products';
 
   return (
     <div className="min-h-screen bg-slate-50">
       <CategoryHero
-        category={activeCategory}
+        category={isFestivalMode ? null : activeCategory}
+        festival={isFestivalMode ? festival : null}
         productCount={hasQuery ? filteredProducts.length : allProducts.length}
       />
 
@@ -98,28 +119,34 @@ export default function ShopPage() {
               onSubmit={handleSubmit}
               onClear={clearSearch}
               variant="shop"
-              placeholder="Search products..."
+              placeholder={
+                isFestivalMode ? 'Search festival deals...' : 'Search products...'
+              }
             />
             {hasQuery && (
               <p className="mt-2 text-center text-xs font-medium text-solar-700 sm:text-sm">
-                Searching across all products
+                {isFestivalMode
+                  ? 'Searching within festival deals'
+                  : 'Searching across all products'}
               </p>
             )}
           </div>
 
-          <div className="relative z-20 px-3.5 py-3 sm:px-5 sm:py-3.5">
-            <CategoryPicker
-              categories={categories}
-              activeCategorySlug={categorySlug}
-            />
-          </div>
+          {!isFestivalMode && (
+            <div className="relative z-20 px-3.5 py-3 sm:px-5 sm:py-3.5">
+              <CategoryPicker
+                categories={categories}
+                activeCategorySlug={categorySlug}
+              />
+            </div>
+          )}
         </div>
 
         <div className="mt-4 sm:mt-5">
           <div className="mb-3 flex flex-col gap-1 sm:mb-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-wider text-solar-600 sm:text-xs">
-                {activeCategory ? 'Category' : 'Shop'}
+                {isFestivalMode ? 'Festival' : activeCategory ? 'Category' : 'Shop'}
               </p>
               <h2 className="text-lg font-bold text-charcoal sm:text-xl lg:text-2xl">
                 {pageTitle}
@@ -145,11 +172,12 @@ export default function ShopPage() {
             <ShopStateCard className="border-red-100 bg-red-50/40">
               <AlertCircle className="h-10 w-10 text-red-400" />
               <h2 className="mt-3 text-base font-bold text-charcoal sm:text-lg">
-                Unable to load products
+                {isFestivalMode ? 'Festival deals unavailable' : 'Unable to load products'}
               </h2>
               <p className="mt-2 max-w-md text-sm text-red-700">
-                Something went wrong while fetching the catalogue. Please try
-                again in a moment.
+                {isFestivalMode
+                  ? 'This festival may have ended or is no longer active.'
+                  : 'Something went wrong while fetching the catalogue. Please try again in a moment.'}
               </p>
             </ShopStateCard>
           ) : filteredProducts.length === 0 ? (
@@ -176,14 +204,16 @@ export default function ShopPage() {
                 <>
                   <PackageOpen className="h-10 w-10 text-slate-300" />
                   <h2 className="mt-3 text-base font-bold text-charcoal sm:text-lg">
-                    No products yet
+                    {isFestivalMode ? 'No festival deals yet' : 'No products yet'}
                   </h2>
                   <p className="mt-2 max-w-md text-sm text-charcoal-light">
-                    {categorySlug
-                      ? 'No products are available in this category right now. Browse all products or check back soon.'
-                      : 'Products added from the admin dashboard will appear here automatically.'}
+                    {isFestivalMode
+                      ? 'No products are assigned to this festival right now.'
+                      : categorySlug
+                        ? 'No products are available in this category right now. Browse all products or check back soon.'
+                        : 'Products added from the admin dashboard will appear here automatically.'}
                   </p>
-                  {categorySlug && (
+                  {!isFestivalMode && categorySlug && (
                     <Link
                       to={buildShopLink('/shop', searchParams)}
                       className="mt-4 inline-flex min-h-[44px] items-center rounded-xl bg-solar-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-solar-700"
@@ -201,6 +231,7 @@ export default function ShopPage() {
                   key={product.id}
                   product={product}
                   variant="shop"
+                  inFestivalSection={isFestivalMode}
                 />
               ))}
             </div>

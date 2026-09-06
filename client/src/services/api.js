@@ -7,6 +7,7 @@ const API_BASE_URL =
 
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
+  credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const token = getState().adminAuth?.token;
 
@@ -61,6 +62,7 @@ export const api = createApi({
     'Festival',
     'SiteMedia',
     'Enquiries',
+    'Analytics',
   ],
   endpoints: () => ({}),
 });

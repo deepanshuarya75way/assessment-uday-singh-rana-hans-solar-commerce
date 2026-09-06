@@ -18,10 +18,6 @@ import {
   stripDescriptionText,
 } from '../utils/sanitizeProductDescription.js';
 import { getMemoryCached } from '../utils/memoryCache.js';
-import {
-  applyActiveFestivalFields,
-  findActiveFestival,
-} from './festivalPricingService.js';
 
 const findPublicIdForUrl = (url, images, publicIds = []) => {
   const normalized = normalizeStoredMediaUrl(url);
@@ -75,29 +71,6 @@ const parseSpecifications = (value) => {
   } catch {
     throw new ApiError(400, 'Specifications must be valid JSON');
   }
-};
-
-const normalizeFestivalFields = async (festivalId, festivalDiscountPercent) => {
-  if (!festivalId || festivalId === 'none' || festivalId === '') {
-    return { festivalId: null, festivalDiscountPercent: null };
-  }
-
-  const festival = await prisma.festival.findUnique({ where: { id: festivalId } });
-
-  if (!festival) {
-    throw new ApiError(400, 'Selected festival does not exist');
-  }
-
-  const percent = Number(festivalDiscountPercent);
-
-  if (!Number.isFinite(percent) || percent <= 0 || percent >= 100) {
-    throw new ApiError(
-      400,
-      'Festival discount must be between 1 and 99 percent when a festival is selected',
-    );
-  }
-
-  return { festivalId, festivalDiscountPercent: percent };
 };
 
 const resolveProductVideoFields = async ({
@@ -195,7 +168,6 @@ const formatProduct = (product, { includeCategory = true } = {}) => {
     isOnSale: product.isOnSale ?? false,
     saleDiscountPercent: product.saleDiscountPercent ?? null,
     festivalId: product.festivalId ?? null,
-    festivalDiscountPercent: product.festivalDiscountPercent ?? null,
     gstEnabled: gstPricing.gstEnabled,
     gstPercentage: gstPricing.gstPercentage,
     gstAmount: gstPricing.gstAmount,
@@ -219,18 +191,17 @@ const formatProduct = (product, { includeCategory = true } = {}) => {
     };
   }
 
+  if (product._count?.productViews !== undefined) {
+    formatted.uniqueVisitorCount = product._count.productViews;
+  }
+
   return formatted;
 };
 
-const formatPublicProduct = (product, activeFestival) => {
-  const formatted = formatProduct(product);
-  return activeFestival
-    ? applyActiveFestivalFields(formatted, product, activeFestival)
-    : formatted;
-};
+const formatPublicProduct = (product) => formatProduct(product);
 
-const formatPublicProducts = (products, activeFestival) =>
-  products.map((product) => formatPublicProduct(product, activeFestival));
+const formatPublicProducts = (products) =>
+  products.map((product) => formatPublicProduct(product));
 
 export const productInclude = {
   category: {
@@ -250,24 +221,20 @@ export const getPublicProducts = async ({ categorySlug } = {}) => {
     where.category = { slug: categorySlug, isActive: true };
   }
 
-  const [products, activeFestival] = await Promise.all([
-    prisma.product.findMany({
-      where,
-      include: productInclude,
-      orderBy: { createdAt: 'desc' },
-    }),
-    findActiveFestival(),
-  ]);
+  const products = await prisma.product.findMany({
+    where,
+    include: productInclude,
+    orderBy: { createdAt: 'desc' },
+  });
 
-  return formatPublicProducts(products, activeFestival);
+  return formatPublicProducts(products);
 };
 
 export const getFeaturedProducts = async () => {
   return getMemoryCached('public-featured-products', 45_000, async () => {
     const baseWhere = { isActive: true };
 
-    const [activeFestival, trendingProducts, subsidyProducts] = await Promise.all([
-      findActiveFestival(),
+    const [trendingProducts, subsidyProducts] = await Promise.all([
       prisma.product.findMany({
         where: { ...baseWhere, isTrending: true },
         include: productInclude,
@@ -281,20 +248,17 @@ export const getFeaturedProducts = async () => {
     ]);
 
     return {
-      trendingProducts: formatPublicProducts(trendingProducts, activeFestival),
-      subsidyProducts: formatPublicProducts(subsidyProducts, activeFestival),
+      trendingProducts: formatPublicProducts(trendingProducts),
+      subsidyProducts: formatPublicProducts(subsidyProducts),
     };
   });
 };
 
 export const getPublicProductById = async (id) => {
-  const [product, activeFestival] = await Promise.all([
-    prisma.product.findFirst({
-      where: { id, isActive: true },
-      include: productInclude,
-    }),
-    findActiveFestival(),
-  ]);
+  const product = await prisma.product.findFirst({
+    where: { id, isActive: true },
+    include: productInclude,
+  });
 
   if (!product) {
     throw new ApiError(404, 'Product not found');
@@ -303,8 +267,8 @@ export const getPublicProductById = async (id) => {
   const relatedProducts = await findRelatedProducts(product, id);
 
   return {
-    product: formatPublicProduct(product, activeFestival),
-    relatedProducts: formatPublicProducts(relatedProducts, activeFestival),
+    product: formatPublicProduct(product),
+    relatedProducts: formatPublicProducts(relatedProducts),
   };
 };
 
@@ -376,7 +340,12 @@ export const getAdminProductById = async (id) => {
 
 export const getAdminProducts = async () => {
   const products = await prisma.product.findMany({
-    include: productInclude,
+    include: {
+      ...productInclude,
+      _count: {
+        select: { productViews: true },
+      },
+    },
     orderBy: { createdAt: 'desc' },
   });
 
@@ -396,8 +365,6 @@ export const createProduct = async ({
   isGovernmentSubsidy = false,
   isOnSale = false,
   saleDiscountPercent = null,
-  festivalId = null,
-  festivalDiscountPercent = null,
   gstEnabled = false,
   gstPercentage = 0,
   imageFiles = [],
@@ -445,10 +412,6 @@ export const createProduct = async ({
     videoLink,
   });
   const saleFields = normalizeSaleFields(isOnSale, saleDiscountPercent);
-  const festivalFields = await normalizeFestivalFields(
-    festivalId,
-    festivalDiscountPercent,
-  );
   const gstFields = normalizeGstFields(gstEnabled, gstPercentage);
 
   const product = await prisma.product.create({
@@ -469,7 +432,6 @@ export const createProduct = async ({
       isTrending,
       isGovernmentSubsidy,
       ...saleFields,
-      ...festivalFields,
       ...gstFields,
     },
     include: productInclude,
@@ -493,8 +455,6 @@ export const updateProduct = async (
     isGovernmentSubsidy,
     isOnSale,
     saleDiscountPercent,
-    festivalId,
-    festivalDiscountPercent,
     gstEnabled,
     gstPercentage,
     existingImages = [],
@@ -589,14 +549,6 @@ export const updateProduct = async (
         )
       : {};
 
-  const festivalUpdate =
-    festivalId !== undefined || festivalDiscountPercent !== undefined
-      ? await normalizeFestivalFields(
-          festivalId ?? existingProduct.festivalId,
-          festivalDiscountPercent ?? existingProduct.festivalDiscountPercent,
-        )
-      : {};
-
   const gstUpdate =
     gstEnabled !== undefined || gstPercentage !== undefined
       ? normalizeGstFields(
@@ -624,7 +576,6 @@ export const updateProduct = async (
       ...(isTrending !== undefined ? { isTrending } : {}),
       ...(isGovernmentSubsidy !== undefined ? { isGovernmentSubsidy } : {}),
       ...saleUpdate,
-      ...festivalUpdate,
       ...gstUpdate,
       images: mergedImages,
       imagePublicIds: mergedPublicIds,

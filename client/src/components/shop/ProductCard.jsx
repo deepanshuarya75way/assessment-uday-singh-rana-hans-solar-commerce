@@ -6,12 +6,10 @@ import {
   formatCurrency,
   getAmountSaved,
   getEffectiveProductPricing,
-  getFestivalProductPricing,
 } from '@/utils/format';
 
 export default function ProductCard({
   product,
-  festivalPricing,
   inFestivalSection = false,
   onViewDetails,
   variant = 'default',
@@ -21,20 +19,10 @@ export default function ProductCard({
 }) {
   const { openEnquiryModal } = useEnquiryModal();
   const imageUrl = product.images?.[0] || '';
-  const pricing = festivalPricing
-    ? getFestivalProductPricing(product, festivalPricing.discountPercent)
-    : getEffectiveProductPricing(product);
+  const pricing = getEffectiveProductPricing(product);
   const hasDiscount = pricing.discountPercent > 0;
   const amountSaved = getAmountSaved(pricing);
   const isShop = variant === 'shop';
-  const resolvedFestivalPricing =
-    festivalPricing ||
-    (product.activeFestivalDiscount
-      ? {
-          discountPercent: product.activeFestivalDiscount,
-          festivalName: product.activeFestival?.name,
-        }
-      : null);
 
   const keySpecs =
     showKeySpecs && product.specifications
@@ -85,10 +73,7 @@ export default function ProductCard({
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-solar-900/10 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
         )}
 
-        <ProductCardBadges
-          product={product}
-          festivalPricing={resolvedFestivalPricing}
-        />
+        <ProductCardBadges product={product} />
 
         {isShop && amountSaved > 0 && (
           <div className="absolute bottom-2.5 left-2.5 z-10 rounded-md border border-solar-100 bg-white/95 px-2 py-1 text-[10px] font-bold text-solar-700 shadow-sm backdrop-blur-sm sm:text-[11px]">

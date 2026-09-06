@@ -56,12 +56,12 @@ model Product {
   gstEnabled      Boolean  @default(false)
   gstPercentage   Float    @default(0)
   festivalId              String?  @db.ObjectId
-  festivalDiscountPercent Float?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
   category Category @relation(fields: [categoryId], references: [id])
   festival Festival? @relation(fields: [festivalId], references: [id], onDelete: SetNull)
+  productViews ProductView[]
 
   @@index([categoryId])
   @@index([isActive])
@@ -79,8 +79,8 @@ model Festival {
   imagePublicId       String?
   startsAt            DateTime
   endsAt              DateTime
-  discountPercent     Float?
   applyToAllProducts  Boolean  @default(false)
+  discountPercent     Float?
   isEnabled           Boolean  @default(true)
   priority            Int      @default(0)
   createdAt           DateTime @default(now())
@@ -147,4 +147,44 @@ model SiteMedia {
   alt           String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+model Visitor {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  visitorKey  String   @unique
+  adminId     String?  @db.ObjectId
+  name        String?
+  firstSeenAt DateTime @default(now())
+  lastSeenAt  DateTime @updatedAt
+
+  dailyVisits  VisitorDailyVisit[]
+  productViews ProductView[]
+
+  @@index([lastSeenAt])
+  @@index([adminId])
+}
+
+model VisitorDailyVisit {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  visitorId String   @db.ObjectId
+  visitDate String
+  createdAt DateTime @default(now())
+
+  visitor Visitor @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+
+  @@unique([visitorId, visitDate])
+  @@index([visitDate])
+}
+
+model ProductView {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  visitorId String   @db.ObjectId
+  productId String   @db.ObjectId
+  createdAt DateTime @default(now())
+
+  visitor Visitor @relation(fields: [visitorId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([visitorId, productId])
+  @@index([productId])
 }

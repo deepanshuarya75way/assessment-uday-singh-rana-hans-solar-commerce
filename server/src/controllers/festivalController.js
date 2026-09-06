@@ -8,9 +8,9 @@ import {
   getAdminFestivalById,
   getAdminFestivals,
   getPublicActiveFestival,
+  getPublicFestivalProducts,
   removeFestivalProduct,
   updateFestival,
-  updateFestivalProductDiscount,
 } from '../services/festivalService.js';
 
 const parseBoolean = (value, fallback = undefined) => {
@@ -28,6 +28,16 @@ export const getPublicActiveFestivalHandler = catchAsync(async (_req, res) => {
   res.status(200).json({
     success: true,
     data: data ?? { festival: null, products: [] },
+  });
+});
+
+export const getPublicFestivalProductsHandler = catchAsync(async (req, res) => {
+  const data = await getPublicFestivalProducts(req.params.id);
+
+  setPublicJsonCache(res, 60);
+  res.status(200).json({
+    success: true,
+    data,
   });
 });
 
@@ -57,8 +67,8 @@ export const createAdminFestival = catchAsync(async (req, res) => {
     description: req.body.description,
     startsAt: req.body.startsAt,
     endsAt: req.body.endsAt,
-    discountPercent: req.body.discountPercent,
     applyToAllProducts: parseBoolean(req.body.applyToAllProducts, false),
+    discountPercent: req.body.discountPercent,
     isEnabled: parseBoolean(req.body.isEnabled, true),
     priority: req.body.priority ?? 0,
     imageFile,
@@ -79,11 +89,11 @@ export const updateAdminFestival = catchAsync(async (req, res) => {
     description: req.body.description,
     startsAt: req.body.startsAt,
     endsAt: req.body.endsAt,
-    discountPercent: req.body.discountPercent,
     applyToAllProducts:
       req.body.applyToAllProducts !== undefined
         ? parseBoolean(req.body.applyToAllProducts)
         : undefined,
+    discountPercent: req.body.discountPercent,
     isEnabled: parseBoolean(req.body.isEnabled),
     priority: req.body.priority,
     imageFile,
@@ -118,26 +128,11 @@ export const assignAdminFestivalProducts = catchAsync(async (req, res) => {
 export const assignAdminFestivalProduct = catchAsync(async (req, res) => {
   const product = await assignFestivalProduct(req.params.id, {
     productId: req.body.productId,
-    festivalDiscountPercent: req.body.festivalDiscountPercent,
   });
 
   res.status(200).json({
     success: true,
     message: 'Product assigned to festival successfully',
-    data: { product },
-  });
-});
-
-export const updateAdminFestivalProductDiscount = catchAsync(async (req, res) => {
-  const product = await updateFestivalProductDiscount(
-    req.params.id,
-    req.params.productId,
-    req.body.festivalDiscountPercent,
-  );
-
-  res.status(200).json({
-    success: true,
-    message: 'Festival discount updated successfully',
     data: { product },
   });
 });

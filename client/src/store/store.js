@@ -8,6 +8,7 @@ import '@/services/productsApi';
 import '@/services/categoriesApi';
 import '@/services/enquiriesApi';
 import '@/services/siteMediaApi';
+import '@/services/analyticsApi';
 
 export const store = configureStore({
   reducer: {

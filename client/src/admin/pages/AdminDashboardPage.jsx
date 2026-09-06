@@ -1,5 +1,6 @@
 import {
   Clock,
+  Eye,
   Inbox,
   Layers,
   Loader2,
@@ -13,6 +14,7 @@ import {
   getEnquiryStatusLabel,
   formatDateTime,
 } from '@/admin/data/mockData';
+import { useGetAdminVisitorAnalyticsQuery } from '@/services/analyticsApi';
 import { useGetAdminCategoriesQuery } from '@/services/categoriesApi';
 import { useGetAdminEnquiriesQuery } from '@/services/enquiriesApi';
 import { useGetAdminProductsQuery } from '@/services/productsApi';
@@ -41,11 +43,19 @@ export default function AdminDashboardPage() {
   } = useGetAdminEnquiriesQuery(RECENT_ENQUIRIES_LIMIT, {
     refetchOnMountOrArgChange: true,
   });
+  const {
+    data: analyticsData,
+    isLoading: analyticsLoading,
+    isError: analyticsError,
+  } = useGetAdminVisitorAnalyticsQuery(undefined, {
+    refetchOnMountOrArgChange: true,
+  });
 
   const products = productsData?.data?.products ?? [];
   const categories = categoriesData?.data?.categories ?? [];
   const recentEnquiries = enquiriesData?.data?.enquiries ?? [];
   const enquiryStats = enquiriesData?.data?.stats;
+  const visitorStats = analyticsData?.data?.stats;
 
   const formatStatValue = (value, isLoading, isError) => {
     if (isLoading) {
@@ -101,6 +111,49 @@ export default function AdminDashboardPage() {
             enquiriesError,
           )}
           icon={Clock}
+          variant="orange"
+        />
+      </div>
+
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Daily Unique Visitors"
+          value={formatStatValue(
+            visitorStats?.daily ?? 0,
+            analyticsLoading,
+            analyticsError,
+          )}
+          icon={Eye}
+          variant="blue"
+        />
+        <StatCard
+          title="Weekly Unique Visitors"
+          value={formatStatValue(
+            visitorStats?.weekly ?? 0,
+            analyticsLoading,
+            analyticsError,
+          )}
+          icon={Eye}
+          variant="emerald"
+        />
+        <StatCard
+          title="Monthly Unique Visitors"
+          value={formatStatValue(
+            visitorStats?.monthly ?? 0,
+            analyticsLoading,
+            analyticsError,
+          )}
+          icon={Eye}
+          variant="amber"
+        />
+        <StatCard
+          title="Overall Unique Visitors"
+          value={formatStatValue(
+            visitorStats?.overall ?? 0,
+            analyticsLoading,
+            analyticsError,
+          )}
+          icon={Eye}
           variant="orange"
         />
       </div>
