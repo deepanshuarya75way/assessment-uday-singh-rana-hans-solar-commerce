@@ -10,9 +10,9 @@ export const productsApi = api.injectEndpoints({
       providesTags: (result) =>
         result?.data?.products
           ? [
-              ...result.data.products.map(({ id }) => ({ type: 'Products', id })),
-              { type: 'Products', id: 'LIST' },
-            ]
+            ...result.data.products.map(({ id }) => ({ type: 'Products', id })),
+            { type: 'Products', id: 'LIST' },
+          ]
           : [{ type: 'Products', id: 'LIST' }],
       keepUnusedDataFor: 120,
     }),
@@ -31,9 +31,9 @@ export const productsApi = api.injectEndpoints({
       providesTags: (result) =>
         result?.data?.products
           ? [
-              ...result.data.products.map(({ id }) => ({ type: 'Products', id })),
-              { type: 'Products', id: 'ADMIN_LIST' },
-            ]
+            ...result.data.products.map(({ id }) => ({ type: 'Products', id })),
+            { type: 'Products', id: 'ADMIN_LIST' },
+          ]
           : [{ type: 'Products', id: 'ADMIN_LIST' }],
     }),
     getAdminProductById: builder.query({

@@ -544,19 +544,19 @@ export const updateProduct = async (
   const saleUpdate =
     isOnSale !== undefined
       ? normalizeSaleFields(
-          isOnSale,
-          saleDiscountPercent ?? existingProduct.saleDiscountPercent,
-        )
+        isOnSale,
+        saleDiscountPercent ?? existingProduct.saleDiscountPercent,
+      )
       : {};
 
   const gstUpdate =
     gstEnabled !== undefined || gstPercentage !== undefined
       ? normalizeGstFields(
-          gstEnabled ?? existingProduct.gstEnabled,
-          gstEnabled === false
-            ? 0
-            : gstPercentage ?? existingProduct.gstPercentage,
-        )
+        gstEnabled ?? existingProduct.gstEnabled,
+        gstEnabled === false
+          ? 0
+          : gstPercentage ?? existingProduct.gstPercentage,
+      )
       : {};
 
   const product = await prisma.product.update({

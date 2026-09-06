@@ -119,9 +119,9 @@ export default function AdminProductFormPage() {
 
     const specs = product.specifications
       ? Object.entries(product.specifications).map(([key, value]) => ({
-          key,
-          value: String(value),
-        }))
+        key,
+        value: String(value),
+      }))
       : [emptySpecRow()];
 
     setSpecRows(specs.length > 0 ? specs : [emptySpecRow()]);
@@ -950,11 +950,10 @@ export default function AdminProductFormPage() {
                 key={option.id}
                 type="button"
                 onClick={() => handleVideoModeChange(option.id)}
-                className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-                  videoMode === option.id
+                className={`rounded-full px-4 py-2 text-xs font-semibold transition ${videoMode === option.id
                     ? 'bg-amber-500 text-white shadow-sm'
                     : 'border border-slate-200 bg-white text-slate-700 hover:border-amber-300 hover:bg-amber-50'
-                }`}
+                  }`}
               >
                 {option.label}
               </button>

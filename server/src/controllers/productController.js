@@ -54,14 +54,14 @@ const mapProductBody = (body, files) => {
       body.isGovernmentSubsidy === undefined
         ? undefined
         : body.isGovernmentSubsidy === true ||
-          body.isGovernmentSubsidy === 'true',
+        body.isGovernmentSubsidy === 'true',
     isOnSale:
       body.isOnSale === undefined
         ? undefined
         : body.isOnSale === true || body.isOnSale === 'true',
     saleDiscountPercent:
       body.saleDiscountPercent === undefined ||
-      body.saleDiscountPercent === ''
+        body.saleDiscountPercent === ''
         ? undefined
         : body.saleDiscountPercent,
     gstEnabled:

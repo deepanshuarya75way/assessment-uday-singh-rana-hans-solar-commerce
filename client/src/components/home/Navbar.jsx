@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import {
   ArrowRight,
@@ -165,14 +165,39 @@ function NavDropdown({ label, items, mobile = false, onNavigate }) {
 
 function ProductsNavMegaMenu() {
   const [open, setOpen] = useState(false);
+  const [categorySearch, setCategorySearch] = useState('');
   const { data } = useGetPublicCategoriesQuery();
   const categories = data?.data?.categories ?? [];
+
+  const normalizedQuery = categorySearch.trim().toLowerCase();
+
+  const filteredCategories = useMemo(() => {
+    if (!normalizedQuery) {
+      return categories;
+    }
+
+    return categories.filter((category) => {
+      const name = category.name?.toLowerCase() ?? '';
+      const slug = category.slug?.toLowerCase().replace(/-/g, ' ') ?? '';
+      return name.includes(normalizedQuery) || slug.includes(normalizedQuery);
+    });
+  }, [categories, normalizedQuery]);
+
+  const showAllCategoriesCard =
+    !normalizedQuery ||
+    'all categories'.includes(normalizedQuery) ||
+    'catalogue'.includes(normalizedQuery);
+
+  const handleClose = () => {
+    setOpen(false);
+    setCategorySearch('');
+  };
 
   return (
     <div
       className="relative"
       onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseLeave={handleClose}
     >
       <NavLink to="/shop/categories" end className={navLinkClass}>
         {({ isActive }) => (
@@ -211,6 +236,7 @@ function ProductsNavMegaMenu() {
               </div>
               <Link
                 to="/shop/categories"
+                onClick={handleClose}
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-lg bg-solar-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-solar-700"
               >
                 View All Categories
@@ -219,29 +245,72 @@ function ProductsNavMegaMenu() {
             </div>
           </div>
 
+          <div className="shrink-0 border-b border-slate-100 bg-slate-50/70 px-3.5 py-2">
+            <div className="relative flex items-center">
+              <Search
+                className="pointer-events-none absolute left-3 h-3.5 w-3.5 text-slate-400"
+                aria-hidden="true"
+              />
+              <input
+                type="text"
+                value={categorySearch}
+                onChange={(e) => setCategorySearch(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                  }
+                  if (e.key === 'Escape') {
+                    if (categorySearch) {
+                      setCategorySearch('');
+                    } else {
+                      setOpen(false);
+                    }
+                  }
+                }}
+                placeholder="Search category…"
+                aria-label="Search category"
+                className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-8 text-xs text-slate-800 placeholder:text-slate-400 transition-colors focus:border-solar-500 focus:outline-none focus:ring-1 focus:ring-solar-500"
+              />
+              {categorySearch ? (
+                <button
+                  type="button"
+                  onClick={() => setCategorySearch('')}
+                  aria-label="Clear category search"
+                  className="absolute right-2 flex h-5 w-5 items-center justify-center rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              ) : null}
+            </div>
+          </div>
+
           <div className="panel-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain p-3">
             <div className="grid grid-cols-3 gap-2">
-              <Link
-                to="/shop/categories"
-                className="group col-span-3 flex items-center gap-3 rounded-xl border border-solar-200 bg-gradient-to-r from-solar-50 to-emerald-50/60 p-3 transition-all duration-200 hover:border-solar-300 hover:shadow-md hover:shadow-solar-600/10 sm:col-span-1 sm:flex-col sm:items-start sm:p-3.5"
-              >
-                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-solar-600 text-white shadow-sm transition group-hover:scale-105">
-                  <Grid3X3 className="h-5 w-5" />
-                </span>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-slate-900 group-hover:text-solar-800">
-                    All Categories
-                  </p>
-                  <p className="mt-0.5 hidden text-xs text-slate-500 sm:block">
-                    View full catalogue
-                  </p>
-                </div>
-              </Link>
+              {showAllCategoriesCard && (
+                <Link
+                  to="/shop/categories"
+                  onClick={handleClose}
+                  className="group col-span-3 flex items-center gap-3 rounded-xl border border-solar-200 bg-gradient-to-r from-solar-50 to-emerald-50/60 p-3 transition-all duration-200 hover:border-solar-300 hover:shadow-md hover:shadow-solar-600/10 sm:col-span-1 sm:flex-col sm:items-start sm:p-3.5"
+                >
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-solar-600 text-white shadow-sm transition group-hover:scale-105">
+                    <Grid3X3 className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-slate-900 group-hover:text-solar-800">
+                      All Categories
+                    </p>
+                    <p className="mt-0.5 hidden text-xs text-slate-500 sm:block">
+                      View full catalogue
+                    </p>
+                  </div>
+                </Link>
+              )}
 
-              {categories.map((category) => (
+              {filteredCategories.map((category) => (
                 <Link
                   key={category.id}
                   to={`/shop/${category.slug}`}
+                  onClick={handleClose}
                   className="group overflow-hidden rounded-xl border border-slate-100 bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-solar-200 hover:shadow-md hover:shadow-solar-600/10"
                 >
                   <div className="aspect-[4/3] overflow-hidden bg-slate-100">
@@ -262,6 +331,21 @@ function ProductsNavMegaMenu() {
                   </p>
                 </Link>
               ))}
+
+              {filteredCategories.length === 0 && !showAllCategoriesCard && (
+                <div className="col-span-3 flex flex-col items-center justify-center py-7 text-center">
+                  <p className="text-xs font-medium text-slate-600">
+                    No categories found for &ldquo;{categorySearch.trim()}&rdquo;
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setCategorySearch('')}
+                    className="mt-2 inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 py-1 text-xs font-semibold text-solar-700 shadow-sm transition hover:bg-slate-50 hover:text-solar-800"
+                  >
+                    Clear search
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
