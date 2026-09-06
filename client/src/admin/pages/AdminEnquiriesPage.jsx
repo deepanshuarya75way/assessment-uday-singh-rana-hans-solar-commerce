@@ -145,6 +145,9 @@ export default function AdminEnquiriesPage() {
                     Subject
                   </th>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    Type
+                  </th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
                     Requirement
                   </th>
                   <th className="px-5 py-3 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">
@@ -161,6 +164,14 @@ export default function AdminEnquiriesPage() {
               <tbody className="divide-y divide-slate-100">
                 {enquiries.map((enquiry) => {
                   const normalizedStatus = normalizeEnquiryStatus(enquiry.status);
+                  const isSubsidyType =
+                    enquiry.type?.toLowerCase() === 'subsidy' ||
+                    enquiry.subject?.toLowerCase().includes('subsidy');
+                  const displayType = isSubsidyType
+                    ? 'Subsidy'
+                    : enquiry.type
+                      ? enquiry.type.charAt(0).toUpperCase() + enquiry.type.slice(1)
+                      : 'Contact';
 
                   return (
                     <tr key={enquiry.id} className="hover:bg-slate-50/80">
@@ -175,6 +186,17 @@ export default function AdminEnquiriesPage() {
                       </td>
                       <td className="px-5 py-4 text-sm text-slate-600">
                         {enquiry.subject}
+                      </td>
+                      <td className="whitespace-nowrap px-5 py-4 text-sm">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                            isSubsidyType
+                              ? 'bg-emerald-100 text-emerald-800 ring-1 ring-inset ring-emerald-600/20'
+                              : 'bg-slate-100 text-slate-700'
+                          }`}
+                        >
+                          {displayType}
+                        </span>
                       </td>
                       <td className="max-w-xs px-5 py-4 text-sm text-slate-600">
                         <p className="line-clamp-3 whitespace-pre-wrap">

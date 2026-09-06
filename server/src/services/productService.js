@@ -164,7 +164,10 @@ const formatProduct = (product, { includeCategory = true } = {}) => {
     warranty: product.warranty,
     isActive: product.isActive,
     isTrending: product.isTrending,
-    isGovernmentSubsidy: product.isGovernmentSubsidy,
+    isGovernmentSubsidy: Boolean(
+      product.isGovernmentSubsidy || product.isSubsidy,
+    ),
+    isSubsidy: Boolean(product.isSubsidy || product.isGovernmentSubsidy),
     isOnSale: product.isOnSale ?? false,
     saleDiscountPercent: product.saleDiscountPercent ?? null,
     festivalId: product.festivalId ?? null,
@@ -214,11 +217,18 @@ export const productInclude = {
 
 export { formatProduct };
 
-export const getPublicProducts = async ({ categorySlug } = {}) => {
+export const getPublicProducts = async ({ categorySlug, isSubsidy } = {}) => {
   const where = { isActive: true };
 
   if (categorySlug) {
     where.category = { slug: categorySlug, isActive: true };
+  }
+
+  if (isSubsidy) {
+    where.OR = [
+      { isSubsidy: true },
+      { isGovernmentSubsidy: true },
+    ];
   }
 
   const products = await prisma.product.findMany({
@@ -241,7 +251,10 @@ export const getFeaturedProducts = async () => {
         orderBy: { updatedAt: 'desc' },
       }),
       prisma.product.findMany({
-        where: { ...baseWhere, isGovernmentSubsidy: true },
+        where: {
+          ...baseWhere,
+          OR: [{ isSubsidy: true }, { isGovernmentSubsidy: true }],
+        },
         include: productInclude,
         orderBy: { updatedAt: 'desc' },
       }),
@@ -363,6 +376,7 @@ export const createProduct = async ({
   isActive = true,
   isTrending = false,
   isGovernmentSubsidy = false,
+  isSubsidy = false,
   isOnSale = false,
   saleDiscountPercent = null,
   gstEnabled = false,
@@ -414,6 +428,8 @@ export const createProduct = async ({
   const saleFields = normalizeSaleFields(isOnSale, saleDiscountPercent);
   const gstFields = normalizeGstFields(gstEnabled, gstPercentage);
 
+  const finalSubsidy = Boolean(isSubsidy || isGovernmentSubsidy);
+
   const product = await prisma.product.create({
     data: {
       name: name.trim(),
@@ -430,7 +446,8 @@ export const createProduct = async ({
       warranty: warranty.trim(),
       isActive,
       isTrending,
-      isGovernmentSubsidy,
+      isGovernmentSubsidy: finalSubsidy,
+      isSubsidy: finalSubsidy,
       ...saleFields,
       ...gstFields,
     },
@@ -453,6 +470,7 @@ export const updateProduct = async (
     isActive,
     isTrending,
     isGovernmentSubsidy,
+    isSubsidy,
     isOnSale,
     saleDiscountPercent,
     gstEnabled,
@@ -559,6 +577,13 @@ export const updateProduct = async (
       )
       : {};
 
+  const resolvedSubsidy =
+    isSubsidy !== undefined
+      ? Boolean(isSubsidy)
+      : isGovernmentSubsidy !== undefined
+        ? Boolean(isGovernmentSubsidy)
+        : undefined;
+
   const product = await prisma.product.update({
     where: { id },
     data: {
@@ -574,7 +599,9 @@ export const updateProduct = async (
       ...(warranty !== undefined ? { warranty: warranty.trim() } : {}),
       ...(isActive !== undefined ? { isActive } : {}),
       ...(isTrending !== undefined ? { isTrending } : {}),
-      ...(isGovernmentSubsidy !== undefined ? { isGovernmentSubsidy } : {}),
+      ...(resolvedSubsidy !== undefined
+        ? { isGovernmentSubsidy: resolvedSubsidy, isSubsidy: resolvedSubsidy }
+        : {}),
       ...saleUpdate,
       ...gstUpdate,
       images: mergedImages,

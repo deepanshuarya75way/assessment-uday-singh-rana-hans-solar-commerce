@@ -51,10 +51,19 @@ const mapProductBody = (body, files) => {
         ? undefined
         : body.isTrending === true || body.isTrending === 'true',
     isGovernmentSubsidy:
-      body.isGovernmentSubsidy === undefined
-        ? undefined
-        : body.isGovernmentSubsidy === true ||
-        body.isGovernmentSubsidy === 'true',
+      body.isSubsidy !== undefined
+        ? body.isSubsidy === true || body.isSubsidy === 'true'
+        : body.isGovernmentSubsidy !== undefined
+          ? body.isGovernmentSubsidy === true ||
+            body.isGovernmentSubsidy === 'true'
+          : undefined,
+    isSubsidy:
+      body.isSubsidy !== undefined
+        ? body.isSubsidy === true || body.isSubsidy === 'true'
+        : body.isGovernmentSubsidy !== undefined
+          ? body.isGovernmentSubsidy === true ||
+            body.isGovernmentSubsidy === 'true'
+          : undefined,
     isOnSale:
       body.isOnSale === undefined
         ? undefined
@@ -83,8 +92,14 @@ const mapProductBody = (body, files) => {
 };
 
 export const getPublicProductsHandler = catchAsync(async (req, res) => {
+  const isSubsidy =
+    req.query.subsidy === 'true' ||
+    req.query.isSubsidy === 'true' ||
+    req.query.isGovernmentSubsidy === 'true';
+
   const products = await getPublicProducts({
     categorySlug: req.query.category,
+    isSubsidy: isSubsidy ? true : undefined,
   });
 
   setPublicJsonCache(res, 30);

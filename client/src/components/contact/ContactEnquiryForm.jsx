@@ -71,6 +71,7 @@ export default function ContactEnquiryForm({
         email: values.email.trim().toLowerCase(),
         message: values.message.trim(),
         enquiryType,
+        ...(enquiryType === 'subsidy' ? { subject: 'Subsidy Requirement' } : {}),
         ...(productName ? { productName } : {}),
         ...(formSource ? { formSource } : {}),
       }).unwrap();

@@ -104,7 +104,9 @@ export default function AdminProductFormPage() {
       warranty: product.warranty,
       isActive: product.isActive,
       isTrending: product.isTrending ?? false,
-      isGovernmentSubsidy: product.isGovernmentSubsidy ?? false,
+      isGovernmentSubsidy: Boolean(
+        product.isSubsidy ?? product.isGovernmentSubsidy ?? false,
+      ),
       isOnSale: product.isOnSale ?? false,
       saleDiscountPercent:
         product.saleDiscountPercent != null
@@ -420,6 +422,7 @@ export default function AdminProductFormPage() {
     formData.append('isActive', String(form.isActive));
     formData.append('isTrending', String(form.isTrending));
     formData.append('isGovernmentSubsidy', String(form.isGovernmentSubsidy));
+    formData.append('isSubsidy', String(form.isGovernmentSubsidy));
     formData.append('isOnSale', String(form.isOnSale));
     if (form.isOnSale) {
       formData.append('saleDiscountPercent', form.saleDiscountPercent);
@@ -593,7 +596,7 @@ export default function AdminProductFormPage() {
             Featured on Homepage
           </h3>
           <p className="mt-1 text-xs text-slate-500">
-            Control where this product appears on the home page. Both can be enabled.
+            Control where this product appears on the home page.
           </p>
           <div className="mt-4 space-y-3">
             <label className="flex cursor-pointer items-center gap-3">
@@ -607,19 +610,6 @@ export default function AdminProductFormPage() {
               />
               <span className="text-sm font-medium text-slate-700">
                 Trending Product
-              </span>
-            </label>
-            <label className="flex cursor-pointer items-center gap-3">
-              <input
-                type="checkbox"
-                checked={form.isGovernmentSubsidy}
-                onChange={(event) =>
-                  updateField('isGovernmentSubsidy', event.target.checked)
-                }
-                className="h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-400"
-              />
-              <span className="text-sm font-medium text-slate-700">
-                Government Subsidy Product
               </span>
             </label>
           </div>
@@ -673,6 +663,42 @@ export default function AdminProductFormPage() {
               )}
             </div>
           )}
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-slate-800">
+                Government Subsidy
+              </h3>
+              <p className="mt-1 text-xs text-slate-500">
+                Mark product as eligible for government subsidy benefits (PM Surya Ghar & central/state solar subsidies). It will display the Government Subsidy badge and appear on the dedicated Subsidy Products page.
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2 pt-0.5">
+              <span
+                className={`text-xs font-bold uppercase tracking-wider ${
+                  form.isGovernmentSubsidy ? 'text-emerald-600' : 'text-slate-400'
+                }`}
+              >
+                {form.isGovernmentSubsidy ? 'ON' : 'OFF'}
+              </span>
+              <label className="relative inline-flex cursor-pointer items-center">
+                <input
+                  type="checkbox"
+                  role="switch"
+                  aria-checked={form.isGovernmentSubsidy}
+                  checked={form.isGovernmentSubsidy}
+                  onChange={(event) =>
+                    updateField('isGovernmentSubsidy', event.target.checked)
+                  }
+                  className="peer sr-only"
+                />
+                <span className="h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-emerald-600 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-400 peer-focus-visible:ring-offset-2" />
+                <span className="absolute left-0.5 top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition peer-checked:translate-x-5" />
+              </label>
+            </div>
+          </div>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">

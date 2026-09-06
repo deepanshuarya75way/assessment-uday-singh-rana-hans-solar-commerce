@@ -3,10 +3,18 @@ import { api } from '@/services/api';
 export const productsApi = api.injectEndpoints({
   endpoints: (builder) => ({
     getPublicProducts: builder.query({
-      query: (categorySlug) => ({
-        url: '/catalog/products',
-        params: categorySlug ? { category: categorySlug } : undefined,
-      }),
+      query: (arg) => {
+        if (typeof arg === 'string') {
+          return {
+            url: '/catalog/products',
+            params: arg ? { category: arg } : undefined,
+          };
+        }
+        return {
+          url: '/catalog/products',
+          params: arg || undefined,
+        };
+      },
       providesTags: (result) =>
         result?.data?.products
           ? [

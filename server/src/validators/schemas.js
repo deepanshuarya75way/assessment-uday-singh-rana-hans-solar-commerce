@@ -38,7 +38,11 @@ export const contactEnquirySchema = z.object({
     .trim()
     .min(10, 'Please describe your requirement')
     .max(2000, 'Message is too long'),
-  enquiryType: z.enum(['contact', 'distributor', 'product', 'quote']).optional(),
+  enquiryType: z
+    .enum(['contact', 'distributor', 'product', 'quote', 'subsidy'])
+    .optional(),
+  type: z.string().optional(),
+  subject: z.string().trim().max(200).optional(),
   formSource: z.enum(['siteSurvey']).optional(),
   productName: z.string().trim().max(200).optional(),
 });

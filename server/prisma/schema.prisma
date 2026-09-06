@@ -51,6 +51,7 @@ model Product {
   isActive        Boolean  @default(true)
   isTrending      Boolean  @default(false)
   isGovernmentSubsidy Boolean @default(false)
+  isSubsidy       Boolean  @default(false)
   isOnSale        Boolean  @default(false)
   saleDiscountPercent Float?
   gstEnabled      Boolean  @default(false)
@@ -67,6 +68,7 @@ model Product {
   @@index([isActive])
   @@index([isTrending])
   @@index([isGovernmentSubsidy])
+  @@index([isSubsidy])
   @@index([festivalId])
 }
 

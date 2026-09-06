@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import AdminRoutes from '@/admin/routes/AdminRoutes';
 import PublicLayout from '@/components/layout/PublicLayout';
 import HomePage from '@/pages/HomePage';
@@ -41,6 +41,7 @@ export default function AppRoutes() {
         <Route path="/distributor" element={<DistributorPage />} />
         <Route path="/learn/:topic" element={<LearnPage />} />
         <Route path="/subsidy/:topic" element={<SubsidyPage />} />
+        <Route path="/subsidy-products" element={<Navigate to="/subsidy/products" replace />} />
         <Route
           path="/privacy-policy"
           element={placeholder(

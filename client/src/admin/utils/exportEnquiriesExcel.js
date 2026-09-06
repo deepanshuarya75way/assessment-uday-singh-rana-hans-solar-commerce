@@ -7,6 +7,13 @@ export const exportEnquiriesToExcel = (enquiries) => {
     Phone: enquiry.phone,
     Email: enquiry.email,
     Subject: enquiry.subject,
+    Type:
+      enquiry.type?.toLowerCase() === 'subsidy' ||
+      enquiry.subject?.toLowerCase().includes('subsidy')
+        ? 'Subsidy'
+        : enquiry.type
+          ? enquiry.type.charAt(0).toUpperCase() + enquiry.type.slice(1)
+          : 'Contact',
     Requirement: enquiry.message,
     Status: getEnquiryStatusLabel(enquiry.status),
     'Date/Time': formatDateTime(enquiry.createdAt),

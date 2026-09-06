@@ -22,6 +22,10 @@ const modalTitles = {
     title: 'Enquire Now',
     description: 'Fill in your details and our team will reach out shortly.',
   },
+  subsidy: {
+    title: 'Send Us Your Requirement',
+    description: 'Fill in your details and our team will reach out shortly.',
+  },
   quote: {
     title: 'Get a Quote',
     description:

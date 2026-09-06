@@ -19,6 +19,11 @@ export const navDropdowns = [
     label: 'Subsidy',
     items: [
       {
+        label: 'Subsidy Products',
+        path: '/subsidy/products',
+        description: 'Explore solar products eligible for government subsidies',
+      },
+      {
         label: 'PM Surya Ghar Yojana',
         path: '/subsidy/pm-surya-ghar',
         description: 'Residential rooftop solar subsidy scheme',

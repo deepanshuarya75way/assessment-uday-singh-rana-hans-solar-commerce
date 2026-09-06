@@ -3,6 +3,29 @@ import ApiError from '../utils/ApiError.js';
 
 const OPEN_ENQUIRY_STATUSES = ['NEW', 'CONTACTED', 'IN_PROGRESS'];
 
+export const getEnquiryTypeFromSubject = (subject = '', type) => {
+  if (type) {
+    const lower = String(type).toLowerCase();
+    if (lower === 'subsidy') return 'Subsidy';
+    if (lower === 'distributor') return 'Distributor';
+    if (lower === 'product') return 'Product';
+    if (lower === 'quote') return 'Quote';
+    return lower.charAt(0).toUpperCase() + lower.slice(1);
+  }
+  const s = (subject || '').toLowerCase();
+  if (s.includes('subsidy')) {
+    return 'Subsidy';
+  }
+  if (s.includes('distributor')) {
+    return 'Distributor';
+  }
+  if (s.includes('product')) return 'Product';
+  if (s.includes('quote') || s.includes('survey')) {
+    return 'Quote';
+  }
+  return 'Contact';
+};
+
 export const getAdminEnquiries = async ({ limit } = {}) => {
   const parsedLimit =
     limit === undefined || limit === null || limit === ''
@@ -23,8 +46,13 @@ export const getAdminEnquiries = async ({ limit } = {}) => {
     }),
   ]);
 
+  const formattedEnquiries = enquiries.map((enquiry) => ({
+    ...enquiry,
+    type: getEnquiryTypeFromSubject(enquiry.subject, enquiry.type),
+  }));
+
   return {
-    enquiries,
+    enquiries: formattedEnquiries,
     stats: {
       total,
       new: newCount,
@@ -55,6 +83,10 @@ const buildEnquirySubjectForPayload = ({
 }) => {
   const trimmedProductName = productName?.trim();
   const type = enquiryType || 'contact';
+
+  if (type === 'subsidy') {
+    return 'Subsidy Requirement';
+  }
 
   if (type === 'product') {
     return trimmedProductName
@@ -89,22 +121,29 @@ export const createContactEnquiry = async ({
   phone,
   message,
   enquiryType,
+  type,
+  subject,
   productName,
   formSource,
 }) => {
   const trimmedMessage = message.trim();
+  const resolvedType = enquiryType || type || 'contact';
+
+  const resolvedSubject =
+    (resolvedType === 'subsidy' ? 'Subsidy Requirement' : subject) ||
+    buildEnquirySubjectForPayload({
+      message: trimmedMessage,
+      enquiryType: resolvedType,
+      productName,
+      formSource,
+    });
 
   return prisma.contactEnquiry.create({
     data: {
       name: name.trim(),
       email: email.trim().toLowerCase(),
       phone: phone.trim(),
-      subject: buildEnquirySubjectForPayload({
-        message: trimmedMessage,
-        enquiryType,
-        productName,
-        formSource,
-      }),
+      subject: resolvedSubject,
       message: trimmedMessage,
       status: 'NEW',
     },
