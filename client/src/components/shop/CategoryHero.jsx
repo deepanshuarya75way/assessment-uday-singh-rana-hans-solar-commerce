@@ -1,8 +1,11 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Grid3X3, Package, ShoppingBag, Sparkles, Sun } from 'lucide-react';
 import CategoryDescription from '@/components/shop/CategoryDescription';
 
 export default function CategoryHero({ category, festival, productCount }) {
+  const [failedImageUrl, setFailedImageUrl] = useState(null);
+
   if (festival) {
     return (
       <section className="relative overflow-hidden border-b border-solar-100 bg-gradient-to-br from-slate-800 via-slate-800 to-slate-900">
@@ -73,59 +76,92 @@ export default function CategoryHero({ category, festival, productCount }) {
     );
   }
 
-  return (
-    <section className="relative overflow-hidden border-b border-slate-200 bg-white">
-      <div className="absolute inset-0">
-        {category.image ? (
-          <img
-            src={category.image}
-            alt=""
-            aria-hidden="true"
-            className="h-full w-full object-cover"
-          />
-        ) : (
-          <div className="h-full w-full bg-gradient-to-br from-solar-100 via-white to-emerald-50" />
-        )}
-        <div className="absolute inset-0 bg-gradient-to-r from-white/96 via-white/90 to-white/78 lg:from-white/94 lg:via-white/82 lg:to-white/55" />
-        <div className="absolute inset-0 bg-gradient-to-t from-white/90 via-transparent to-white/20" />
-      </div>
+  const hasValidImage =
+    Boolean(category.image) && failedImageUrl !== category.image;
 
-      <div className="relative mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-7 lg:px-8 lg:py-9">
-        <div className="flex flex-wrap items-center gap-2">
+  return (
+    <section className="relative overflow-hidden border-b border-slate-200/90 bg-gradient-to-b from-slate-50/70 via-white to-slate-50/30">
+      <div
+        className="pointer-events-none absolute -left-20 top-0 h-64 w-64 rounded-full bg-solar-200/20 blur-3xl"
+        aria-hidden="true"
+      />
+      <div
+        className="pointer-events-none absolute -right-16 bottom-0 h-64 w-64 rounded-full bg-emerald-200/15 blur-3xl"
+        aria-hidden="true"
+      />
+
+      <div className="relative mx-auto max-w-7xl px-4 py-4 sm:px-6 sm:py-6 lg:px-8 lg:py-7">
+        {/* Navigation Breadcrumb Pills */}
+        <div className="mb-3.5 flex flex-wrap items-center gap-2 sm:mb-4">
           <Link
             to="/shop"
-            className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-solar-200 bg-white/95 px-3 py-1.5 text-xs font-medium text-solar-700 shadow-sm backdrop-blur-sm transition hover:border-solar-300 hover:bg-solar-50 sm:text-sm"
+            className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-solar-200 bg-white/95 px-3 py-1.5 text-xs font-medium text-solar-700 shadow-2xs backdrop-blur-sm transition hover:border-solar-300 hover:bg-solar-50 sm:text-sm"
           >
             <ArrowLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
             All Products
           </Link>
           <Link
             to="/shop/categories"
-            className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-700 shadow-sm backdrop-blur-sm transition hover:border-solar-200 hover:text-solar-700 sm:text-sm"
+            className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full border border-slate-200 bg-white/90 px-3 py-1.5 text-xs font-medium text-slate-700 shadow-2xs backdrop-blur-sm transition hover:border-solar-200 hover:text-solar-700 sm:text-sm"
           >
             <Grid3X3 className="h-3.5 w-3.5" />
             Categories
           </Link>
           {productCount > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-solar-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-sm sm:text-xs">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-solar-600 px-3 py-1.5 text-[11px] font-semibold text-white shadow-2xs sm:text-xs">
               <Package className="h-3.5 w-3.5" />
-              {productCount} products
+              {productCount} {productCount === 1 ? 'product' : 'products'}
             </span>
           )}
         </div>
 
-        <div className="mt-3.5 max-w-2xl sm:mt-4 lg:max-w-3xl">
-          <div className="inline-flex items-center gap-2 rounded-full border border-solar-200 bg-solar-50/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-solar-700 backdrop-blur-sm sm:text-xs">
-            <Grid3X3 className="h-3.5 w-3.5" />
-            Product Category
+        {/* Cohesive Category Introduction Section: Left Content + Right Image on Desktop, Stacked on Mobile */}
+        <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xs sm:p-6 lg:p-8">
+          <div className="grid grid-cols-1 items-center gap-6 sm:gap-7 lg:grid-cols-12 lg:gap-10 xl:gap-12">
+            {/* LEFT COLUMN: Category Header & Description (58% on desktop) */}
+            <div
+              className={`min-w-0 flex flex-col ${
+                hasValidImage ? 'lg:col-span-7' : 'lg:col-span-12 max-w-3xl'
+              }`}
+            >
+              <div className="inline-flex items-center gap-2 self-start rounded-full border border-solar-200 bg-solar-50/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-solar-700 sm:text-xs">
+                <Grid3X3 className="h-3.5 w-3.5" aria-hidden="true" />
+                Category
+              </div>
+
+              <h1 className="mt-2 text-2xl font-bold tracking-tight text-charcoal sm:mt-2.5 sm:text-3xl lg:text-4xl lg:leading-tight">
+                {category.name}
+              </h1>
+
+              {category.description ? (
+                <CategoryDescription
+                  description={category.description}
+                  className="mt-3 text-slate-600 sm:mt-4"
+                />
+              ) : null}
+            </div>
+
+            {/* RIGHT COLUMN: Category Image (42% on desktop) */}
+            {hasValidImage ? (
+              <div className="w-full lg:col-span-5">
+                <div className="group relative overflow-hidden rounded-2xl border border-slate-200/85 bg-slate-50/60 p-1.5 shadow-xs transition duration-300 hover:border-solar-200 hover:shadow-md sm:p-2">
+                  <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-slate-100 sm:aspect-[16/10] lg:aspect-[4/3]">
+                    <img
+                      src={category.image}
+                      alt={category.name}
+                      className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                      loading="eager"
+                      onError={() => setFailedImageUrl(category.image)}
+                    />
+                    <div
+                      className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-black/5"
+                      aria-hidden="true"
+                    />
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-charcoal sm:mt-2.5 sm:text-3xl lg:text-4xl lg:leading-tight">
-            {category.name}
-          </h1>
-          <CategoryDescription
-            description={category.description}
-            className="mt-2 sm:mt-3"
-          />
         </div>
       </div>
     </section>

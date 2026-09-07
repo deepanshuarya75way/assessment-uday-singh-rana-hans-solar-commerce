@@ -383,8 +383,8 @@ a {
   line-height: 1.4;
 }
 
-.category-description h3 {
-  font-size: 0.9375rem;
+.category-description h4 {
+  font-size: 0.875rem;
   line-height: 1.45;
   font-weight: 600;
 }
@@ -403,6 +403,11 @@ a {
   .category-description h3 {
     font-size: 1rem;
     margin-top: 1rem;
+    margin-bottom: 0.375rem;
+  }
+  .category-description h4 {
+    font-size: 0.9375rem;
+    margin-top: 0.875rem;
     margin-bottom: 0.375rem;
   }
 }
@@ -472,6 +477,45 @@ a {
 .category-description em,
 .category-description i {
   font-style: italic;
+}
+
+/* Underline & Strikethrough */
+.category-description u {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.category-description s,
+.category-description del,
+.category-description strike {
+  text-decoration: line-through;
+  color: #64748b;
+}
+
+/* Blockquotes */
+.category-description blockquote {
+  border-left: 3px solid var(--color-solar-500, #22c55e);
+  padding-left: 0.875rem;
+  margin: 0.75rem 0;
+  font-style: italic;
+  color: #475569;
+}
+
+/* Subscript & Superscript */
+.category-description sub,
+.category-description sup {
+  font-size: 75%;
+  line-height: 0;
+  position: relative;
+  vertical-align: baseline;
+}
+
+.category-description sup {
+  top: -0.5em;
+}
+
+.category-description sub {
+  bottom: -0.25em;
 }
 
 /* Highlights */
