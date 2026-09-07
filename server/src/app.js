@@ -14,6 +14,8 @@ import { uploadsRoot } from './utils/fileUpload.js';
 const app = express();
 
 app.set('trust proxy', 1);
+// JSON API responses are consumed by fetch/RTK Query — disable Express ETag/304.
+app.set('etag', false);
 
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok' });

@@ -1,6 +1,6 @@
 export const setPublicJsonCache = (res) => {
-  // Use no-cache, must-revalidate so browsers always check with server using ETag.
-  // When data is unchanged, server immediately returns 304 Not Modified.
-  // When admin creates/updates data, the client receives fresh data immediately.
-  res.set('Cache-Control', 'no-cache, must-revalidate');
+  // Public JSON is consumed by RTK Query/fetch, not browser document navigation.
+  // Do not use HTTP revalidation (ETag/304) here — fetch clients cannot reliably
+  // parse empty 304 bodies. Server-side memoryCache.js handles fast responses.
+  res.set('Cache-Control', 'private, no-store');
 };
