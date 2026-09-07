@@ -116,48 +116,45 @@ export default function CategoryHero({ category, festival, productCount }) {
         </div>
 
         {/* Cohesive Category Introduction Section: Left Content + Right Image on Desktop, Stacked on Mobile */}
-        <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white p-4 shadow-xs sm:p-6 lg:p-8">
+        <div className="category-section-enter overflow-hidden rounded-2xl border border-slate-200/85 bg-white p-4 shadow-xs sm:rounded-3xl sm:p-6 lg:p-8">
           <div className="grid grid-cols-1 items-center gap-6 sm:gap-7 lg:grid-cols-12 lg:gap-10 xl:gap-12">
             {/* LEFT COLUMN: Category Header & Description (58% on desktop) */}
             <div
-              className={`min-w-0 flex flex-col ${
+              className={`min-w-0 flex flex-col justify-center ${
                 hasValidImage ? 'lg:col-span-7' : 'lg:col-span-12 max-w-3xl'
               }`}
             >
-              <div className="inline-flex items-center gap-2 self-start rounded-full border border-solar-200 bg-solar-50/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-solar-700 sm:text-xs">
-                <Grid3X3 className="h-3.5 w-3.5" aria-hidden="true" />
+              <div className="inline-flex items-center gap-1.5 self-start rounded-full border border-solar-200/90 bg-solar-50/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-solar-700">
+                <Grid3X3 className="h-3 w-3 text-solar-600" aria-hidden="true" />
                 Category
               </div>
 
-              <h1 className="mt-2 text-2xl font-bold tracking-tight text-charcoal sm:mt-2.5 sm:text-3xl lg:text-4xl lg:leading-tight">
+              <h1 className="mt-2.5 text-2xl font-bold tracking-tight text-slate-900 sm:mt-3 sm:text-3xl lg:text-4xl lg:leading-tight">
                 {category.name}
               </h1>
 
               {category.description ? (
-                <CategoryDescription
-                  description={category.description}
-                  className="mt-3 text-slate-600 sm:mt-4"
-                />
+                <div className="mt-3.5 sm:mt-4">
+                  <CategoryDescription description={category.description} />
+                </div>
               ) : null}
             </div>
 
-            {/* RIGHT COLUMN: Category Image (42% on desktop) */}
+            {/* RIGHT COLUMN: Large Complete Category Image Showcase (42% on desktop) */}
             {hasValidImage ? (
               <div className="w-full lg:col-span-5">
-                <div className="group relative overflow-hidden rounded-2xl border border-slate-200/85 bg-slate-50/60 p-1.5 shadow-xs transition duration-300 hover:border-solar-200 hover:shadow-md sm:p-2">
-                  <div className="relative aspect-[16/10] w-full overflow-hidden rounded-xl bg-slate-100 sm:aspect-[16/10] lg:aspect-[4/3]">
-                    <img
-                      src={category.image}
-                      alt={category.name}
-                      className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.03]"
-                      loading="eager"
-                      onError={() => setFailedImageUrl(category.image)}
-                    />
-                    <div
-                      className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-black/5"
-                      aria-hidden="true"
-                    />
-                  </div>
+                <div className="group relative flex w-full items-center justify-center overflow-hidden rounded-xl border border-slate-200/85 bg-gradient-to-b from-slate-50/90 via-white to-slate-100/50 p-3 shadow-2xs transition-all duration-300 hover:border-solar-300/80 hover:shadow-md sm:rounded-2xl sm:p-4 lg:p-5">
+                  <img
+                    src={category.image}
+                    alt={category.name}
+                    className="max-h-[260px] w-full rounded-lg object-contain transition-transform duration-500 ease-out group-hover:scale-[1.015] sm:max-h-[340px] sm:rounded-xl lg:max-h-[380px]"
+                    loading="eager"
+                    onError={() => setFailedImageUrl(category.image)}
+                  />
+                  <div
+                    className="pointer-events-none absolute inset-0 rounded-xl ring-1 ring-inset ring-black/5 sm:rounded-2xl"
+                    aria-hidden="true"
+                  />
                 </div>
               </div>
             ) : null}
