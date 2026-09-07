@@ -17,7 +17,7 @@ import {
   sanitizeProductDescription,
   stripDescriptionText,
 } from '../utils/sanitizeProductDescription.js';
-import { getMemoryCached } from '../utils/memoryCache.js';
+import { getMemoryCached, clearMemoryCache } from '../utils/memoryCache.js';
 
 const findPublicIdForUrl = (url, images, publicIds = []) => {
   const normalized = normalizeStoredMediaUrl(url);
@@ -28,8 +28,8 @@ const findPublicIdForUrl = (url, images, publicIds = []) => {
   return index >= 0 ? publicIds[index] ?? null : null;
 };
 
-const toAbsoluteMediaUrlForProduct = (mediaUrl, updatedAt) =>
-  toAbsoluteMediaUrl(mediaUrl, updatedAt, { width: 1200 });
+const toAbsoluteMediaUrlForProduct = (mediaUrl, updatedAt, options = {}) =>
+  toAbsoluteMediaUrl(mediaUrl, updatedAt, { width: 1200, ...options });
 
 const formatProductVideoUrl = (videoUrl, updatedAt) => {
   if (!videoUrl) {
@@ -215,7 +215,7 @@ const formatProductSummary = (product, { includeCategory = true } = {}) => {
     description: '', // Omitted from lists to reduce payload size significantly
     price: product.price,
     images: (product.images || []).map((image) =>
-      toAbsoluteMediaUrlForProduct(image, product.updatedAt),
+      toAbsoluteMediaUrlForProduct(image, product.updatedAt, { width: 600 }),
     ),
     videoUrl: null,
     categoryId: product.categoryId,
@@ -598,6 +598,8 @@ export const createProduct = async ({
     include: productInclude,
   });
 
+  clearMemoryCache('public-featured-products');
+
   return formatProduct(product);
 };
 
@@ -774,6 +776,8 @@ export const updateProduct = async (
     include: productInclude,
   });
 
+  clearMemoryCache('public-featured-products');
+
   return formatProduct(product);
 };
 
@@ -791,6 +795,8 @@ export const deleteProduct = async (id) => {
     videoUrl: product.videoUrl,
     videoPublicId: product.videoPublicId,
   });
+
+  clearMemoryCache('public-featured-products');
 
   return { message: 'Product deleted successfully' };
 };

@@ -148,7 +148,7 @@ export default function InstallationGallerySection() {
                   src={image.src}
                   alt={image.alt || `HANS Solar installation ${index + 1}`}
                   className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
-                  loading={index < 4 ? 'eager' : 'lazy'}
+                  loading="lazy"
                   decoding="async"
                 />
 

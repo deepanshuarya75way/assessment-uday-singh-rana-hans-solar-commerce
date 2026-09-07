@@ -1,5 +1,16 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import ContactEnquiryModal from '@/components/contact/ContactEnquiryModal';
+import {
+  createContext,
+  lazy,
+  Suspense,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from 'react';
+
+const ContactEnquiryModal = lazy(
+  () => import('@/components/contact/ContactEnquiryModal'),
+);
 
 const EnquiryModalContext = createContext(null);
 
@@ -41,13 +52,17 @@ export function EnquiryModalProvider({ children }) {
   return (
     <EnquiryModalContext.Provider value={value}>
       {children}
-      <ContactEnquiryModal
-        isOpen={modalState.isOpen}
-        enquiryType={modalState.enquiryType}
-        productName={modalState.productName}
-        formSource={modalState.formSource}
-        onClose={closeEnquiryModal}
-      />
+      {modalState.isOpen && (
+        <Suspense fallback={null}>
+          <ContactEnquiryModal
+            isOpen={modalState.isOpen}
+            enquiryType={modalState.enquiryType}
+            productName={modalState.productName}
+            formSource={modalState.formSource}
+            onClose={closeEnquiryModal}
+          />
+        </Suspense>
+      )}
     </EnquiryModalContext.Provider>
   );
 }

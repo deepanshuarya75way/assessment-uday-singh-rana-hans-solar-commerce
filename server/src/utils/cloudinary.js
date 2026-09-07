@@ -277,8 +277,20 @@ export const optimizeCloudinaryUrl = (url, { width, height, crop = 'limit' } = {
     return url;
   }
 
-  if (url.includes('/upload/f_auto,q_auto') || url.includes('/upload/w_')) {
+  const uploadMarker = '/upload/';
+  const uploadIndex = url.indexOf(uploadMarker);
+  if (uploadIndex === -1) {
     return url;
+  }
+
+  const prefix = url.slice(0, uploadIndex + uploadMarker.length);
+  const remainder = url.slice(uploadIndex + uploadMarker.length);
+  const segments = remainder.split('/');
+
+  let assetPath = remainder;
+  if (segments.length > 0 && isCloudinaryTransformationSegment(segments[0])) {
+    segments.shift();
+    assetPath = segments.join('/');
   }
 
   const transforms = isGifDeliveryUrl(url) ? [] : ['f_auto', 'q_auto'];
@@ -295,5 +307,6 @@ export const optimizeCloudinaryUrl = (url, { width, height, crop = 'limit' } = {
     transforms.push(`c_${crop}`);
   }
 
-  return url.replace('/upload/', `/upload/${transforms.join(',')}/`);
+  const transformString = transforms.length > 0 ? `${transforms.join(',')}/` : '';
+  return `${prefix}${transformString}${assetPath}`;
 };

@@ -1,7 +1,7 @@
 import prisma from '../config/prisma.js';
 import ApiError from '../utils/ApiError.js';
 import { deleteBannerFile, persistUploadedImage } from '../utils/fileUpload.js';
-import { getMemoryCached } from '../utils/memoryCache.js';
+import { getMemoryCached, clearMemoryCache } from '../utils/memoryCache.js';
 import { toAbsoluteMediaUrl } from '../utils/mediaUrl.js';
 
 export const BANNER_POSITIONS = [1, 2, 3, 4];
@@ -237,6 +237,7 @@ export const upsertHomepageBanner = async ({
     });
 
     const [formattedBanner] = await enrichBanners([banner]);
+    clearMemoryCache('public-homepage-banners');
     return formattedBanner;
   }
 
@@ -248,6 +249,7 @@ export const upsertHomepageBanner = async ({
   });
 
   const [formattedBanner] = await enrichBanners([banner]);
+  clearMemoryCache('public-homepage-banners');
   return formattedBanner;
 };
 
@@ -306,6 +308,7 @@ export const updateHomepageBannerByPosition = async (
   });
 
   const [formattedBanner] = await enrichBanners([banner]);
+  clearMemoryCache('public-homepage-banners');
   return formattedBanner;
 };
 
@@ -329,5 +332,6 @@ export const deleteHomepageBannerByPosition = async (position) => {
     await deleteBannerFile(banner.mobileImageUrl, banner.mobileImagePublicId);
   }
 
+  clearMemoryCache('public-homepage-banners');
   return { message: 'Banner removed successfully' };
 };

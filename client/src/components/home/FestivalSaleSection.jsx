@@ -99,29 +99,16 @@ function FestivalProductCard({ product, onViewDetails, imagePriority = false }) 
 
 function FestivalProductRail({ products, onViewDetails }) {
   return (
-    <>
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:hidden">
-        {products.map((product, index) => (
-          <FestivalProductCard
-            key={product.id}
-            product={product}
-            imagePriority={index < 4}
-            onViewDetails={() => onViewDetails(product)}
-          />
-        ))}
-      </div>
-
-      <div className="hidden gap-5 lg:grid lg:grid-cols-3 xl:grid-cols-4">
-        {products.map((product, index) => (
-          <FestivalProductCard
-            key={product.id}
-            product={product}
-            imagePriority={index < 4}
-            onViewDetails={() => onViewDetails(product)}
-          />
-        ))}
-      </div>
-    </>
+    <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 lg:gap-5 xl:grid-cols-4">
+      {products.map((product) => (
+        <FestivalProductCard
+          key={product.id}
+          product={product}
+          imagePriority={false}
+          onViewDetails={() => onViewDetails(product)}
+        />
+      ))}
+    </div>
   );
 }
 

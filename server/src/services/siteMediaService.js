@@ -18,6 +18,7 @@ import {
   persistSiteMediaImage,
 } from '../utils/fileUpload.js';
 import { toAbsoluteMediaUrl } from '../utils/mediaUrl.js';
+import { getMemoryCached, clearMemoryCache } from '../utils/memoryCache.js';
 
 const resolveAssetUrl = (asset, definition) => {
   if (asset?.imageUrl) {
@@ -61,32 +62,34 @@ export const getAdminSiteMediaList = async () => {
 };
 
 export const getPublicSiteMedia = async () => {
-  const assets = await prisma.siteMedia.findMany();
-  const assetByKey = new Map(assets.map((asset) => [asset.key, asset]));
+  return getMemoryCached('public-site-media', 60_000, async () => {
+    const assets = await prisma.siteMedia.findMany();
+    const assetByKey = new Map(assets.map((asset) => [asset.key, asset]));
 
-  const logoDefinition = SITE_MEDIA_ASSETS.logo;
+    const logoDefinition = SITE_MEDIA_ASSETS.logo;
 
-  return {
-    logo: resolveAssetUrl(assetByKey.get('logo') ?? null, logoDefinition),
-    gallery: Array.from({ length: GALLERY_COUNT }, (_, index) => {
-      const key = `gallery-${index + 1}`;
-      const definition = SITE_MEDIA_ASSETS[key];
-      const asset = assetByKey.get(key) ?? null;
+    return {
+      logo: resolveAssetUrl(assetByKey.get('logo') ?? null, logoDefinition),
+      gallery: Array.from({ length: GALLERY_COUNT }, (_, index) => {
+        const key = `gallery-${index + 1}`;
+        const definition = SITE_MEDIA_ASSETS[key];
+        const asset = assetByKey.get(key) ?? null;
 
-      return {
-        src: resolveAssetUrl(asset, definition),
-        alt: asset?.alt ?? definition.defaultAlt,
-      };
-    }),
-    aboutUs: resolveAssetUrl(
-      assetByKey.get('about-us') ?? null,
-      SITE_MEDIA_ASSETS['about-us'],
-    ),
-    office: resolveAssetUrl(
-      assetByKey.get('office') ?? null,
-      SITE_MEDIA_ASSETS.office,
-    ),
-  };
+        return {
+          src: resolveAssetUrl(asset, definition),
+          alt: asset?.alt ?? definition.defaultAlt,
+        };
+      }),
+      aboutUs: resolveAssetUrl(
+        assetByKey.get('about-us') ?? null,
+        SITE_MEDIA_ASSETS['about-us'],
+      ),
+      office: resolveAssetUrl(
+        assetByKey.get('office') ?? null,
+        SITE_MEDIA_ASSETS.office,
+      ),
+    };
+  });
 };
 
 export const upsertSiteMediaAsset = async (key, imageFile, { alt } = {}) => {
@@ -129,6 +132,8 @@ export const upsertSiteMediaAsset = async (key, imageFile, { alt } = {}) => {
       ...(alt !== undefined ? { alt: alt.trim() || definition.defaultAlt } : {}),
     },
   });
+
+  clearMemoryCache('public-site-media');
 
   return formatSiteMediaAsset(asset, definition);
 };

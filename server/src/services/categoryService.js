@@ -5,6 +5,7 @@ import {
   persistUploadedImage,
 } from '../utils/fileUpload.js';
 import { toAbsoluteMediaUrl } from '../utils/mediaUrl.js';
+import { getMemoryCached, clearMemoryCache } from '../utils/memoryCache.js';
 
 const DEFAULT_CATEGORIES = [
   {
@@ -46,7 +47,7 @@ const formatCategory = (category, { productCount } = {}) => {
     name: category.name,
     slug: category.slug,
     description: category.description,
-    image: toAbsoluteMediaUrl(category.image, category.updatedAt, { width: 1200 }),
+    image: toAbsoluteMediaUrl(category.image, category.updatedAt, { width: 600 }),
     isActive: category.isActive,
     createdAt: category.createdAt,
     updatedAt: category.updatedAt,
@@ -97,12 +98,14 @@ export const ensureDefaultCategories = async () => {
 };
 
 export const getPublicCategories = async () => {
-  const categories = await prisma.category.findMany({
-    where: { isActive: true },
-    orderBy: { name: 'asc' },
-  });
+  return getMemoryCached('public-categories', 60_000, async () => {
+    const categories = await prisma.category.findMany({
+      where: { isActive: true },
+      orderBy: { name: 'asc' },
+    });
 
-  return categories.map((category) => formatCategory(category));
+    return categories.map((category) => formatCategory(category));
+  });
 };
 
 export const getPublicCategoryBySlug = async (slug) => {
@@ -182,6 +185,9 @@ export const createCategory = async ({
     },
   });
 
+  clearMemoryCache('public-categories');
+  clearMemoryCache('public-featured-products');
+
   return formatCategory(category);
 };
 
@@ -241,6 +247,9 @@ export const updateCategory = async (
     },
   });
 
+  clearMemoryCache('public-categories');
+  clearMemoryCache('public-featured-products');
+
   return formatCategory(category);
 };
 
@@ -268,6 +277,9 @@ export const deleteCategory = async (id) => {
   if (category.image) {
     await deleteCategoryImageFile(category.image, category.imagePublicId);
   }
+
+  clearMemoryCache('public-categories');
+  clearMemoryCache('public-featured-products');
 
   return { message: 'Category deleted successfully' };
 };
