@@ -9,17 +9,33 @@ export function ProductSaleBadge({
     return null;
   }
 
-  const classes =
-    size === 'lg'
-      ? 'px-3 py-1 text-sm'
-      : 'px-2.5 py-1 text-xs';
+  const isLarge = size === 'lg';
+
+  const classes = isLarge
+    ? 'px-3 py-1 text-sm rounded-full'
+    : 'px-1.5 py-0.5 text-[9px] rounded-md sm:px-2.5 sm:py-1 sm:text-xs sm:rounded-full';
+
+  const iconClasses = isLarge
+    ? 'h-4 w-4'
+    : 'h-2.5 w-2.5 sm:h-3 sm:w-3';
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 font-bold uppercase tracking-wide text-white shadow-sm ${classes}`}
+      className={`inline-flex items-center gap-0.5 sm:gap-1 bg-gradient-to-r from-amber-500 to-orange-500 font-bold uppercase tracking-tight sm:tracking-wide text-white shadow-xs sm:shadow-sm ${classes}`}
     >
-      <Zap className={size === 'lg' ? 'h-4 w-4' : 'h-3 w-3'} />
-      {label} {saleDiscountPercent}% Off
+      <Zap className={`${iconClasses} shrink-0`} />
+      {isLarge ? (
+        <span>
+          {label} {saleDiscountPercent}% Off
+        </span>
+      ) : (
+        <>
+          <span className="sm:hidden">{saleDiscountPercent}% OFF</span>
+          <span className="hidden sm:inline">
+            {label} {saleDiscountPercent}% Off
+          </span>
+        </>
+      )}
     </span>
   );
 }
@@ -28,17 +44,29 @@ export function ProductSubsidyBadge({
   label = 'Government Subsidy',
   size = 'sm',
 }) {
-  const classes =
-    size === 'lg'
-      ? 'px-3 py-1 text-sm font-semibold tracking-normal'
-      : 'px-2.5 py-1 text-[11px] sm:text-xs font-bold uppercase tracking-wide';
+  const isLarge = size === 'lg';
+
+  const classes = isLarge
+    ? 'px-3 py-1 text-sm font-semibold tracking-normal rounded-full'
+    : 'px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-tight rounded-md sm:px-2.5 sm:py-1 sm:text-xs sm:tracking-wide sm:rounded-full';
+
+  const iconClasses = isLarge
+    ? 'h-4 w-4'
+    : 'h-2.5 w-2.5 sm:h-3 sm:w-3';
 
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-sm ring-1 ring-emerald-500/20 ${classes}`}
+      className={`inline-flex items-center gap-0.5 sm:gap-1 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white shadow-xs sm:shadow-sm ring-1 ring-emerald-500/20 ${classes}`}
     >
-      <ShieldCheck className={size === 'lg' ? 'h-4 w-4 text-emerald-100 shrink-0' : 'h-3 w-3 text-emerald-100 shrink-0'} />
-      <span>{label}</span>
+      <ShieldCheck className={`${iconClasses} text-emerald-100 shrink-0`} />
+      {isLarge ? (
+        <span>{label}</span>
+      ) : (
+        <>
+          <span className="sm:hidden">Govt Subsidy</span>
+          <span className="hidden sm:inline">{label}</span>
+        </>
+      )}
     </span>
   );
 }
@@ -51,10 +79,21 @@ export function ProductCardBadges({ product }) {
     return null;
   }
 
+  const alignmentClass =
+    showSubsidy && showSale
+      ? 'justify-between'
+      : showSale
+        ? 'justify-end'
+        : 'justify-start';
+
   return (
-    <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex flex-wrap items-start justify-end gap-1.5 sm:gap-2">
+    <div
+      className={`pointer-events-none absolute inset-x-1.5 top-1.5 z-10 flex items-start ${alignmentClass} sm:inset-x-3 sm:top-3 sm:justify-end sm:gap-2`}
+    >
       {showSubsidy && <ProductSubsidyBadge label="Government Subsidy" />}
-      {showSale && <ProductSaleBadge saleDiscountPercent={product.saleDiscountPercent} />}
+      {showSale && (
+        <ProductSaleBadge saleDiscountPercent={product.saleDiscountPercent} />
+      )}
     </div>
   );
 }

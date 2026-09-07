@@ -86,10 +86,10 @@ export default function WhyChooseUs() {
     <section
       ref={sectionRef}
       aria-labelledby="about-us-heading"
-      className="overflow-x-hidden border-b border-slate-100 bg-white py-10 sm:py-12 lg:py-16"
+      className="overflow-x-hidden border-b border-slate-100 bg-white py-7 sm:py-10 lg:py-14"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-14 xl:gap-16">
+        <div className="grid items-center gap-6 sm:gap-10 lg:grid-cols-2 lg:gap-14 xl:gap-16">
           <div
             className={`reveal-up ${isVisible ? 'is-visible' : ''}`}
             style={{ animationDelay: '60ms' }}

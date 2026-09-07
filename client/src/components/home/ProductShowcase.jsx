@@ -19,7 +19,7 @@ export default function ProductShowcase() {
   return (
     <section
       ref={sectionRef}
-      className="relative overflow-hidden border-t border-slate-100 bg-gradient-to-b from-white via-slate-50/30 to-white py-10 sm:py-12 lg:py-14"
+      className="relative overflow-hidden border-t border-slate-100 bg-gradient-to-b from-white via-slate-50/30 to-white py-7 sm:py-10 lg:py-14"
     >
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -right-20 top-0 h-56 w-56 rounded-full bg-solar-100/30 blur-3xl" />

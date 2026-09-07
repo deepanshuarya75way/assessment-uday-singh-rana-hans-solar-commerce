@@ -43,7 +43,7 @@ function ProductCarousel({ products, isVisible, sectionKey, fadeFrom }) {
 
   return (
     <>
-      <div className="mt-8 grid grid-cols-2 gap-3 sm:hidden">
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:hidden">
         {products.map((product, index) => (
           <div
             key={`${sectionKey}-mobile-${product.id}`}
@@ -115,10 +115,10 @@ function FeaturedProductBlock({
 
   const paddingClass =
     layout === 'group-start'
-      ? 'pt-12 pb-7 sm:pt-14 sm:pb-8'
+      ? 'pt-8 pb-5 sm:pt-11 sm:pb-7 lg:pt-14 lg:pb-8'
       : layout === 'group-end'
-        ? 'border-t border-slate-200/70 pt-8 pb-12 sm:pt-10 sm:pb-14'
-        : 'py-12 sm:py-14';
+        ? 'border-t border-slate-200/70 pt-6 pb-8 sm:pt-8 sm:pb-11 lg:pt-10 lg:pb-14'
+        : 'py-7 sm:py-10 lg:py-14';
 
   const backgroundClass =
     layout === 'standalone'

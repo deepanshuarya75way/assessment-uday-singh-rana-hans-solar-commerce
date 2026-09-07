@@ -78,7 +78,7 @@ export default function InstallationGallerySection() {
     <section
       ref={sectionRef}
       id="installation-gallery-section"
-      className="bg-white py-12 sm:py-16 lg:py-20"
+      className="bg-white py-7 sm:py-11 lg:py-16"
     >
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className={`reveal-up ${isVisible ? 'is-visible' : ''}`}>
