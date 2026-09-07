@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { analyticsRateLimiter } from '../middleware/rateLimiter.js';
 import {
   recordProductViewHandler,
   recordSiteVisitHandler,
@@ -6,6 +7,7 @@ import {
 
 const router = Router();
 
+router.use(analyticsRateLimiter);
 router.post('/visit', recordSiteVisitHandler);
 router.post('/products/:productId/view', recordProductViewHandler);
 

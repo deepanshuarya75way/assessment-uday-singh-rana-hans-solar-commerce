@@ -3,7 +3,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import app from './app.js';
 import config from './config/index.js';
-import { connectDatabase } from './config/database.js';
+import { connectDatabase, disconnectDatabase } from './config/database.js';
 import { ensureDefaultAdmin } from './services/adminAuthService.js';
 import { ensureDefaultCategories } from './services/categoryService.js';
 import { validateTotpEncryptionConfig } from './utils/totpCrypto.js';
@@ -62,13 +62,24 @@ const releaseLock = () => {
   }
 };
 
-const shutdown = (signal) => {
+const shutdown = async (signal) => {
   if (httpServer) {
-    httpServer.close(() => {
+    httpServer.close(async () => {
+      try {
+        await disconnectDatabase();
+      } catch {
+        // Ignore disconnect errors during shutdown.
+      }
       releaseLock();
       process.exit(0);
     });
     return;
+  }
+
+  try {
+    await disconnectDatabase();
+  } catch {
+    // Ignore disconnect errors during shutdown.
   }
 
   releaseLock();

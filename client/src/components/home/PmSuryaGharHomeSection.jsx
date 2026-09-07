@@ -256,14 +256,17 @@ function DesktopSubsidyLayout({ isVisible }) {
           </div>
 
           <div className="relative h-full min-h-0">
-            <img
-              src="/new.jpg"
-              alt="Happy family with rooftop solar installation by HANS Solar Energy"
-              className="subsidy-hero-image h-full min-h-full w-full rounded-2xl object-cover object-center shadow-[0_16px_40px_rgba(15,23,42,0.12)]"
-              fetchPriority="low"
-              decoding="async"
-              loading="lazy"
-            />
+            <picture>
+              <source srcSet="/new.webp" type="image/webp" />
+              <img
+                src="/new.jpg"
+                alt="Happy family with rooftop solar installation by HANS Solar Energy"
+                className="subsidy-hero-image h-full min-h-full w-full rounded-2xl object-cover object-center shadow-[0_16px_40px_rgba(15,23,42,0.12)]"
+                fetchPriority="low"
+                decoding="async"
+                loading="lazy"
+              />
+            </picture>
 
             <p className="pointer-events-none absolute left-5 top-5 max-w-[200px] font-serif text-[1.5rem] italic leading-tight text-solar-800/90 xl:text-[1.65rem]">
               {DESKTOP_IMAGE_SCRIPT}
@@ -314,14 +317,17 @@ export default function PmSuryaGharHomeSection() {
             className={`reveal-up mx-auto w-full max-w-xl ${isVisible ? 'is-visible' : ''}`}
             style={{ animationDelay: '80ms' }}
           >
-            <img
-              src="/new.jpg"
-              alt="Happy family with rooftop solar installation by HANS Solar Energy"
-              className={`subsidy-hero-image aspect-[16/10] w-full rounded-2xl object-cover object-[center_38%] shadow-[0_8px_24px_rgba(15,23,42,0.1)] max-lg:shadow-[0_10px_28px_rgba(15,23,42,0.12)] ${isVisible ? 'is-visible' : 'opacity-0'}`}
-              fetchPriority="low"
-              decoding="async"
-              loading="lazy"
-            />
+            <picture>
+              <source srcSet="/new.webp" type="image/webp" />
+              <img
+                src="/new.jpg"
+                alt="Happy family with rooftop solar installation by HANS Solar Energy"
+                className={`subsidy-hero-image aspect-[16/10] w-full rounded-2xl object-cover object-[center_38%] shadow-[0_8px_24px_rgba(15,23,42,0.1)] max-lg:shadow-[0_10px_28px_rgba(15,23,42,0.12)] ${isVisible ? 'is-visible' : 'opacity-0'}`}
+                fetchPriority="low"
+                decoding="async"
+                loading="lazy"
+              />
+            </picture>
           </div>
 
           <div

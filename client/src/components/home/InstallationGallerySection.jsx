@@ -3,7 +3,7 @@ import { BadgeCheck, ChevronLeft, ChevronRight, Eye, Home, Sparkles, X } from 'l
 import SectionHeader from '@/components/home/SectionHeader';
 import useRevealOnScroll from '@/hooks/useRevealOnScroll';
 import { installationGalleryImages } from '@/constants/homeContent';
-import { useGetSiteMediaQuery } from '@/services/siteMediaApi';
+import { useSiteMediaQuery } from '@/context/SiteDataContext';
 import { lockBodyScroll, unlockBodyScroll } from '@/utils/bodyScrollLock';
 
 // Layout classes engineered for 11 items:
@@ -22,7 +22,7 @@ const getCardLayoutClass = (index) => {
 
 export default function InstallationGallerySection() {
   const { ref: sectionRef, isVisible } = useRevealOnScroll();
-  const { data: siteMediaResponse } = useGetSiteMediaQuery();
+  const { data: siteMediaResponse } = useSiteMediaQuery();
   const galleryImages =
     siteMediaResponse?.data?.gallery ?? installationGalleryImages;
 

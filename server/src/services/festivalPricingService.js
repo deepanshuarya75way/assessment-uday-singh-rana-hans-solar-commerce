@@ -1,10 +1,11 @@
 import prisma from '../config/prisma.js';
 import { getMemoryCached } from '../utils/memoryCache.js';
+import { CACHE_KEYS } from '../utils/cacheKeys.js';
 
 const ACTIVE_FESTIVAL_CACHE_MS = 60_000;
 
 export const findActiveFestival = async () => {
-  return getMemoryCached('active-festival', ACTIVE_FESTIVAL_CACHE_MS, async () => {
+  return getMemoryCached(CACHE_KEYS.ACTIVE_FESTIVAL, ACTIVE_FESTIVAL_CACHE_MS, async () => {
     const now = new Date();
 
     return prisma.festival.findFirst({

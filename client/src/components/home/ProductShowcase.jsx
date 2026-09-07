@@ -3,14 +3,15 @@ import { ArrowRight, Loader2 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import CategoryCard from '@/components/shop/CategoryCard';
 import SectionHeader from '@/components/home/SectionHeader';
+import SectionQueryError from '@/components/common/SectionQueryError';
 import useRevealOnScroll from '@/hooks/useRevealOnScroll';
-import { useGetPublicCategoriesQuery } from '@/services/categoriesApi';
+import { useSiteCategoriesQuery } from '@/context/SiteDataContext';
 
 const HOMEPAGE_CATEGORY_LIMIT = 4;
 
 export default function ProductShowcase() {
   const { ref: sectionRef, isVisible: sectionVisible } = useRevealOnScroll();
-  const { data, isLoading, isError } = useGetPublicCategoriesQuery();
+  const { data, isLoading, isError, refetch } = useSiteCategoriesQuery();
 
   const categories = data?.data?.categories ?? [];
   const featuredCategories = categories.slice(0, HOMEPAGE_CATEGORY_LIMIT);
@@ -55,9 +56,10 @@ export default function ProductShowcase() {
             <Loader2 className="h-8 w-8 animate-spin text-solar-600" />
           </div>
         ) : isError ? (
-          <div className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-8 text-center text-red-700">
-            Unable to load categories right now.
-          </div>
+          <SectionQueryError
+            message="Unable to load categories right now."
+            onRetry={refetch}
+          />
         ) : categories.length === 0 ? (
           <div className="mt-8 rounded-2xl border border-dashed border-slate-300 bg-white/80 p-8 text-center sm:p-10">
             <p className="text-sm text-slate-600">

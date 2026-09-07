@@ -5,9 +5,10 @@ import {
   persistUploadedImage,
 } from '../utils/fileUpload.js';
 import { findActiveFestival } from './festivalPricingService.js';
-import { formatProduct, formatProductSummary, productInclude } from './productService.js';
+import { formatProduct, formatProductSummary, productInclude, productListSelect } from './productService.js';
 import { toAbsoluteMediaUrl } from '../utils/mediaUrl.js';
-import { clearMemoryCache } from '../utils/memoryCache.js';
+import { clearMemoryCache, getMemoryCached } from '../utils/memoryCache.js';
+import { CACHE_KEYS, invalidatePublicProducts } from '../utils/cacheKeys.js';
 
 const toAbsoluteImageUrl = (imageUrl, updatedAt) =>
   toAbsoluteMediaUrl(imageUrl, updatedAt, { width: 1400 });
@@ -116,8 +117,9 @@ export const getPublicFestivalProducts = async (festivalId) => {
 
   const products = await prisma.product.findMany({
     where: getFestivalProductWhere(festival),
-    include: productInclude,
+    select: productListSelect,
     orderBy: { updatedAt: 'desc' },
+    take: 500,
   });
 
   return {
@@ -127,26 +129,29 @@ export const getPublicFestivalProducts = async (festivalId) => {
 };
 
 export const getPublicActiveFestival = async () => {
-  const festival = await findActiveFestival();
+  return getMemoryCached(CACHE_KEYS.PUBLIC_ACTIVE_FESTIVAL, 45_000, async () => {
+    const festival = await findActiveFestival();
 
-  if (!festival) {
-    return null;
-  }
+    if (!festival) {
+      return null;
+    }
 
-  const products = await prisma.product.findMany({
-    where: getFestivalProductWhere(festival),
-    include: productInclude,
-    orderBy: { updatedAt: 'desc' },
+    const products = await prisma.product.findMany({
+      where: getFestivalProductWhere(festival),
+      select: productListSelect,
+      orderBy: { updatedAt: 'desc' },
+      take: 24,
+    });
+
+    if (products.length === 0) {
+      return null;
+    }
+
+    return {
+      festival: formatFestival(festival),
+      products: products.map((product) => formatProductSummary(product)),
+    };
   });
-
-  if (products.length === 0) {
-    return null;
-  }
-
-  return {
-    festival: formatFestival(festival),
-    products: products.map((product) => formatProductSummary(product)),
-  };
 };
 
 export const getAdminFestivals = async () => {
@@ -240,8 +245,9 @@ export const createFestival = async ({
     },
   });
 
-  clearMemoryCache('active-festival');
-  clearMemoryCache('public-featured-products');
+  clearMemoryCache(CACHE_KEYS.ACTIVE_FESTIVAL);
+  clearMemoryCache(CACHE_KEYS.PUBLIC_ACTIVE_FESTIVAL);
+  invalidatePublicProducts();
 
   return formatFestival(festival, { includeStatus: true });
 };
@@ -330,8 +336,9 @@ export const updateFestival = async (
     });
   }
 
-  clearMemoryCache('active-festival');
-  clearMemoryCache('public-featured-products');
+  clearMemoryCache(CACHE_KEYS.ACTIVE_FESTIVAL);
+  clearMemoryCache(CACHE_KEYS.PUBLIC_ACTIVE_FESTIVAL);
+  invalidatePublicProducts();
 
   return formatFestival(festival, { includeStatus: true });
 };
@@ -353,8 +360,9 @@ export const deleteFestival = async (id) => {
   await prisma.festival.delete({ where: { id } });
   await deleteFestivalImageFile(festival.imageUrl, festival.imagePublicId);
 
-  clearMemoryCache('active-festival');
-  clearMemoryCache('public-featured-products');
+  clearMemoryCache(CACHE_KEYS.ACTIVE_FESTIVAL);
+  clearMemoryCache(CACHE_KEYS.PUBLIC_ACTIVE_FESTIVAL);
+  invalidatePublicProducts();
 
   return { message: 'Festival deleted successfully' };
 };
@@ -378,16 +386,10 @@ export const assignFestivalProducts = async (festivalId, productIds = []) => {
     throw new ApiError(400, 'One or more selected products were not found');
   }
 
-  await Promise.all(
-    productIds.map((productId) =>
-      prisma.product.update({
-        where: { id: productId },
-        data: {
-          festivalId,
-        },
-      }),
-    ),
-  );
+  await prisma.product.updateMany({
+    where: { id: { in: productIds } },
+    data: { festivalId },
+  });
 
   const assignedProducts = await prisma.product.findMany({
     where: { festivalId },
@@ -395,8 +397,9 @@ export const assignFestivalProducts = async (festivalId, productIds = []) => {
     orderBy: { name: 'asc' },
   });
 
-  clearMemoryCache('active-festival');
-  clearMemoryCache('public-featured-products');
+  clearMemoryCache(CACHE_KEYS.ACTIVE_FESTIVAL);
+  clearMemoryCache(CACHE_KEYS.PUBLIC_ACTIVE_FESTIVAL);
+  invalidatePublicProducts();
 
   return assignedProducts.map((product) => formatProduct(product));
 };
@@ -422,8 +425,9 @@ export const assignFestivalProduct = async (festivalId, { productId }) => {
     include: productInclude,
   });
 
-  clearMemoryCache('active-festival');
-  clearMemoryCache('public-featured-products');
+  clearMemoryCache(CACHE_KEYS.ACTIVE_FESTIVAL);
+  clearMemoryCache(CACHE_KEYS.PUBLIC_ACTIVE_FESTIVAL);
+  invalidatePublicProducts();
 
   return formatProduct(updatedProduct);
 };
@@ -445,8 +449,9 @@ export const removeFestivalProduct = async (festivalId, productId) => {
     include: productInclude,
   });
 
-  clearMemoryCache('active-festival');
-  clearMemoryCache('public-featured-products');
+  clearMemoryCache(CACHE_KEYS.ACTIVE_FESTIVAL);
+  clearMemoryCache(CACHE_KEYS.PUBLIC_ACTIVE_FESTIVAL);
+  invalidatePublicProducts();
 
   return formatProduct(updatedProduct);
 };

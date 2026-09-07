@@ -6,6 +6,7 @@ import {
   CarouselNavButton,
 } from '@/components/home/CarouselControls';
 import SectionHeader from '@/components/home/SectionHeader';
+import SectionQueryError from '@/components/common/SectionQueryError';
 import useRevealOnScroll from '@/hooks/useRevealOnScroll';
 import { useGetFeaturedProductsQuery } from '@/services/productsApi';
 
@@ -155,7 +156,7 @@ function FeaturedProductBlock({
 }
 
 export default function FeaturedProductsSection({ section = 'all' }) {
-  const { data, isLoading } = useGetFeaturedProductsQuery();
+  const { data, isLoading, isError, refetch } = useGetFeaturedProductsQuery();
 
   const trendingProducts = useMemo(
     () =>
@@ -175,6 +176,15 @@ export default function FeaturedProductsSection({ section = 'all' }) {
 
   if (isLoading) {
     return null;
+  }
+
+  if (isError) {
+    return (
+      <SectionQueryError
+        message="Unable to load featured products right now."
+        onRetry={refetch}
+      />
+    );
   }
 
   const showTrending = section === 'all' || section === 'trending';

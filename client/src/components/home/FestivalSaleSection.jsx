@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { ArrowRight, ChevronRight, Clock, Sparkles, Tag, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Button from '@/components/ui/Button';
 import { ProductSaleBadge } from '@/components/shop/ProductBadges';
-import ProductQuickViewModal from '@/components/shop/ProductQuickViewModal';
 import FestivalCountdown from '@/components/home/FestivalCountdown';
+import SectionQueryError from '@/components/common/SectionQueryError';
 import useFestivalCountdown from '@/hooks/useFestivalCountdown';
 import { useGetActiveFestivalQuery } from '@/services/festivalsApi';
 import {
@@ -12,6 +12,10 @@ import {
   getAmountSaved,
   getEffectiveProductPricing,
 } from '@/utils/format';
+
+const ProductQuickViewModal = lazy(
+  () => import('@/components/shop/ProductQuickViewModal'),
+);
 
 function FestivalProductCard({ product, onViewDetails, imagePriority = false }) {
   const imageUrl = product.images?.[0] || '';
@@ -114,7 +118,7 @@ function FestivalProductRail({ products, onViewDetails }) {
 
 export default function FestivalSaleSection() {
   const [quickViewProduct, setQuickViewProduct] = useState(null);
-  const { data, isLoading, isFetching } = useGetActiveFestivalQuery(undefined, {
+  const { data, isLoading, isFetching, isError, refetch } = useGetActiveFestivalQuery(undefined, {
     refetchOnMountOrArgChange: false,
     refetchOnFocus: false,
     refetchOnReconnect: true,
@@ -123,6 +127,15 @@ export default function FestivalSaleSection() {
   const festival = data?.data?.festival;
   const products = data?.data?.products ?? [];
   const remaining = useFestivalCountdown(festival?.endsAt);
+
+  if (isError) {
+    return (
+      <SectionQueryError
+        message="Unable to load festival offers right now."
+        onRetry={refetch}
+      />
+    );
+  }
 
   if ((isLoading && !data) || (isFetching && !festival)) {
     return null;
@@ -288,10 +301,12 @@ export default function FestivalSaleSection() {
         </div>
       </section>
 
-      <ProductQuickViewModal
-        product={quickViewProduct}
-        onClose={() => setQuickViewProduct(null)}
-      />
+      <Suspense fallback={null}>
+        <ProductQuickViewModal
+          product={quickViewProduct}
+          onClose={() => setQuickViewProduct(null)}
+        />
+      </Suspense>
 
     </>
   );

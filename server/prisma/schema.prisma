@@ -67,6 +67,9 @@ model Product {
 
   @@index([categoryId])
   @@index([isActive])
+  @@index([isActive, categoryId])
+  @@index([isActive, isTrending])
+  @@index([isActive, festivalId])
   @@index([isTrending])
   @@index([isGovernmentSubsidy])
   @@index([isSubsidy])
@@ -92,6 +95,7 @@ model Festival {
   products Product[]
 
   @@index([isEnabled])
+  @@index([isEnabled, startsAt, endsAt])
   @@index([priority])
   @@index([startsAt])
   @@index([endsAt])

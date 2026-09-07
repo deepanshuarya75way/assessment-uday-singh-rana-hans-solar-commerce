@@ -1,5 +1,5 @@
 /**
- * Verifies homepage refresh traffic no longer trips the global rate limiter.
+ * Verifies homepage refresh traffic no longer trips rate limiters.
  * Run: node scripts/stress-test-public-api.js
  */
 import express from 'express';
@@ -10,6 +10,7 @@ import { setPublicJsonCache } from '../src/utils/publicCache.js';
 const app = express();
 
 app.set('trust proxy', 1);
+app.set('etag', false);
 app.use(
   cors({
     origin: 'https://store.hanssolar.in',
@@ -85,15 +86,16 @@ const server = app.listen(0, async () => {
 
     for (const endpoint of endpoints) {
       if (withAuth || endpoint.method === 'POST') {
-        const preflightStatus = await requestEndpoint(
-          {
-            method: 'OPTIONS',
-            path: endpoint.path,
-            actualMethod: endpoint.method,
-          },
-          withAuth,
+        statuses.push(
+          await requestEndpoint(
+            {
+              method: 'OPTIONS',
+              path: endpoint.path,
+              actualMethod: endpoint.method,
+            },
+            withAuth,
+          ),
         );
-        statuses.push(preflightStatus);
       }
 
       statuses.push(await requestEndpoint(endpoint, withAuth));

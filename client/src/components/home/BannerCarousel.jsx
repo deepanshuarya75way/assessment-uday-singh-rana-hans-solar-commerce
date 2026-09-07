@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useGetPublicHomepageBannersQuery } from '@/services/homepageBannerApi';
+import SectionQueryError from '@/components/common/SectionQueryError';
 import {
   getBannerCtaLabel,
   isExternalHref,
@@ -34,7 +35,7 @@ function BannerCta({ label }) {
   );
 }
 
-function BannerImage({ banner, className, loading, fetchPriority }) {
+function BannerImage({ banner, className, loading, fetchPriority, hidden }) {
   const alt = banner.title || `Banner ${banner.position}`;
   const sharedProps = {
     alt,
@@ -44,6 +45,10 @@ function BannerImage({ banner, className, loading, fetchPriority }) {
     fetchPriority,
     loading,
   };
+
+  if (hidden) {
+    return <div className={className} aria-hidden="true" />;
+  }
 
   if (banner.mobileImageUrl) {
     return (
@@ -57,7 +62,7 @@ function BannerImage({ banner, className, loading, fetchPriority }) {
   return <img {...sharedProps} src={banner.imageUrl} />;
 }
 
-function BannerSlideContent({ banner, hasMultipleSlides }) {
+function BannerSlideContent({ banner, hasMultipleSlides, isActive }) {
   const ctaLabel = getBannerCtaLabel(banner);
   const ctaPositionClass = hasMultipleSlides
     ? 'bottom-[3.35rem] sm:bottom-[3.75rem] md:bottom-20'
@@ -71,8 +76,9 @@ function BannerSlideContent({ banner, hasMultipleSlides }) {
       <BannerImage
         banner={banner}
         className="h-[260px] w-full bg-slate-900 object-contain object-center transition-transform duration-500 group-hover:scale-[1.02] group-active:scale-[0.995] sm:h-[340px] sm:object-cover md:h-[500px] lg:h-[560px] lg:object-cover"
-        loading={banner.position === 1 ? 'eager' : 'lazy'}
-        fetchPriority={banner.position === 1 ? 'high' : 'auto'}
+        loading={isActive ? 'eager' : 'lazy'}
+        fetchPriority={isActive ? 'high' : 'low'}
+        hidden={!isActive}
       />
 
       <span
@@ -91,7 +97,7 @@ function BannerSlideContent({ banner, hasMultipleSlides }) {
   );
 }
 
-function BannerSlide({ banner, categorySlugById, hasMultipleSlides }) {
+function BannerSlide({ banner, categorySlugById, hasMultipleSlides, isActive }) {
   const href = resolveBannerHref(banner, categorySlugById);
 
   if (!href) {
@@ -99,8 +105,9 @@ function BannerSlide({ banner, categorySlugById, hasMultipleSlides }) {
       <BannerImage
         banner={banner}
         className="h-[260px] w-full bg-slate-900 object-contain object-center sm:h-[340px] sm:object-cover md:h-[500px] lg:h-[560px] lg:object-cover"
-        loading={banner.position === 1 ? 'eager' : 'lazy'}
-        fetchPriority={banner.position === 1 ? 'high' : 'auto'}
+        loading={isActive ? 'eager' : 'lazy'}
+        fetchPriority={isActive ? 'high' : 'low'}
+        hidden={!isActive}
       />
     );
   }
@@ -122,6 +129,7 @@ function BannerSlide({ banner, categorySlugById, hasMultipleSlides }) {
         <BannerSlideContent
           banner={banner}
           hasMultipleSlides={hasMultipleSlides}
+          isActive={isActive}
         />
       </a>
     );
@@ -138,13 +146,14 @@ function BannerSlide({ banner, categorySlugById, hasMultipleSlides }) {
       <BannerSlideContent
         banner={banner}
         hasMultipleSlides={hasMultipleSlides}
+        isActive={isActive}
       />
     </Link>
   );
 }
 
 export default function BannerCarousel() {
-  const { data, isLoading, isError } = useGetPublicHomepageBannersQuery();
+  const { data, isLoading, isError, refetch } = useGetPublicHomepageBannersQuery();
 
   const banners = data?.data?.banners ?? [];
   const categorySlugById = useMemo(() => new Map(), []);
@@ -160,16 +169,16 @@ export default function BannerCarousel() {
     totalSlides > 0 ? ((currentIndex % totalSlides) + totalSlides) % totalSlides : 0;
 
   useEffect(() => {
-    const firstBanner = banners[0];
-    if (!firstBanner) {
+    const activeBanner = banners[safeIndex] ?? banners[0];
+    if (!activeBanner) {
       return undefined;
     }
 
     const preferDesktop = window.matchMedia('(min-width: 1024px)').matches;
     const href =
-      preferDesktop || !firstBanner.mobileImageUrl
-        ? firstBanner.imageUrl
-        : firstBanner.mobileImageUrl;
+      preferDesktop || !activeBanner.mobileImageUrl
+        ? activeBanner.imageUrl
+        : activeBanner.mobileImageUrl;
 
     if (!href) {
       return undefined;
@@ -185,7 +194,34 @@ export default function BannerCarousel() {
     return () => {
       preload.remove();
     };
-  }, [banners[0]?.imageUrl, banners[0]?.mobileImageUrl]);
+  }, [banners, safeIndex]);
+
+  useEffect(() => {
+    if (totalSlides <= 1) {
+      return undefined;
+    }
+
+    const nextBanner = banners[(safeIndex + 1) % totalSlides];
+    if (!nextBanner) {
+      return undefined;
+    }
+
+    const preferDesktop = window.matchMedia('(min-width: 1024px)').matches;
+    const href =
+      preferDesktop || !nextBanner.mobileImageUrl
+        ? nextBanner.imageUrl
+        : nextBanner.mobileImageUrl;
+
+    if (!href) {
+      return undefined;
+    }
+
+    const prefetch = new Image();
+    prefetch.decoding = 'async';
+    prefetch.src = href;
+
+    return undefined;
+  }, [banners, safeIndex, totalSlides]);
 
   const goToSlide = useCallback(
     (index) => {
@@ -267,12 +303,22 @@ export default function BannerCarousel() {
     );
   }
 
-  if (isError || totalSlides === 0) {
+  if (isError) {
     return (
       <section className="flex h-[260px] w-full items-center justify-center bg-slate-100 sm:h-[340px] md:h-[500px] lg:h-[560px]">
-        <p className="text-sm text-slate-600">
-          {isError ? 'Unable to load homepage banners.' : 'No banners available.'}
-        </p>
+        <SectionQueryError
+          message="Unable to load homepage banners."
+          onRetry={refetch}
+          compact
+        />
+      </section>
+    );
+  }
+
+  if (totalSlides === 0) {
+    return (
+      <section className="flex h-[260px] w-full items-center justify-center bg-slate-100 sm:h-[340px] md:h-[500px] lg:h-[560px]">
+        <p className="text-sm text-slate-600">No banners available.</p>
       </section>
     );
   }
@@ -290,7 +336,7 @@ export default function BannerCarousel() {
         className="relative z-[1] flex transition-transform duration-700 ease-in-out"
         style={{ transform: `translateX(-${safeIndex * 100}%)` }}
       >
-        {banners.map((banner) => (
+        {banners.map((banner, index) => (
           <div
             key={`${banner.id}-${banner.updatedAt}`}
             className="relative h-[260px] w-full shrink-0 sm:h-[340px] md:h-[500px] lg:h-[560px]"
@@ -299,6 +345,7 @@ export default function BannerCarousel() {
               banner={banner}
               categorySlugById={categorySlugById}
               hasMultipleSlides={hasMultipleSlides}
+              isActive={index === safeIndex}
             />
           </div>
         ))}

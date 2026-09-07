@@ -4,6 +4,7 @@ import express from 'express';
 import helmet from 'helmet';
 import morgan from 'morgan';
 import config from './config/index.js';
+import prisma from './config/prisma.js';
 import rateLimiter from './middleware/rateLimiter.js';
 import notFound from './middleware/notFound.js';
 import errorHandler from './middleware/errorHandler.js';
@@ -17,8 +18,13 @@ app.set('trust proxy', 1);
 // JSON API responses are consumed by fetch/RTK Query — disable Express ETag/304.
 app.set('etag', false);
 
-app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok' });
+app.get('/health', async (_req, res) => {
+  try {
+    await prisma.$runCommandRaw({ ping: 1 });
+    res.status(200).json({ status: 'ok' });
+  } catch {
+    res.status(503).json({ status: 'error', message: 'Database unavailable' });
+  }
 });
 
 app.use(

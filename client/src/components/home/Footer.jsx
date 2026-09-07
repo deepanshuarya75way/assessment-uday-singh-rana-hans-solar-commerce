@@ -4,8 +4,7 @@ import { ChevronDown, Loader2, Mail, MapPin, Phone } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { contactInfo, corporateOffice } from '@/constants/homeContent';
 import { useEnquiryModal } from '@/context/EnquiryModalContext';
-import { useGetPublicCategoriesQuery } from '@/services/categoriesApi';
-import { useGetSiteMediaQuery } from '@/services/siteMediaApi';
+import { useSiteCategoriesQuery, useSiteMediaQuery } from '@/context/SiteDataContext';
 
 const quickLinks = [
   { label: 'Home', path: '/' },
@@ -99,7 +98,7 @@ function FooterLinkList({ links, onOpenEnquiry }) {
 }
 
 function FooterCategories() {
-  const { data, isLoading } = useGetPublicCategoriesQuery();
+  const { data, isLoading } = useSiteCategoriesQuery();
 
   const categories = data?.data?.categories ?? [];
 
@@ -153,7 +152,7 @@ function FooterCategories() {
 
 export default function Footer() {
   const { openEnquiryModal } = useEnquiryModal();
-  const { data: siteMediaResponse } = useGetSiteMediaQuery();
+  const { data: siteMediaResponse } = useSiteMediaQuery();
   const apiLogo = siteMediaResponse?.data?.logo;
   const [logoSrc, setLogoSrc] = useState(apiLogo ?? '/logo.jpg');
   const [logoError, setLogoError] = useState(false);

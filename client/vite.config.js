@@ -21,6 +21,15 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (id.includes('node_modules/@reduxjs/toolkit') || id.includes('node_modules/react-redux')) {
+            return 'vendor-redux';
+          }
+          if (id.includes('node_modules/react-router')) {
+            return 'vendor-router';
+          }
+          if (id.includes('node_modules/dompurify')) {
+            return 'vendor-dompurify';
+          }
           if (id.includes('node_modules/xlsx')) {
             return 'vendor-xlsx';
           }

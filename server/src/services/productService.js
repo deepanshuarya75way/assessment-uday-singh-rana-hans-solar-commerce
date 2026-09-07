@@ -17,7 +17,8 @@ import {
   sanitizeProductDescription,
   stripDescriptionText,
 } from '../utils/sanitizeProductDescription.js';
-import { getMemoryCached, clearMemoryCache } from '../utils/memoryCache.js';
+import { getMemoryCached } from '../utils/memoryCache.js';
+import { CACHE_KEYS, invalidatePublicProducts } from '../utils/cacheKeys.js';
 
 const findPublicIdForUrl = (url, images, publicIds = []) => {
   const normalized = normalizeStoredMediaUrl(url);
@@ -275,6 +276,32 @@ export const productInclude = {
   },
 };
 
+const MAX_PUBLIC_PRODUCTS = 500;
+
+export const productListSelect = {
+  id: true,
+  name: true,
+  price: true,
+  images: true,
+  categoryId: true,
+  stock: true,
+  warranty: true,
+  isActive: true,
+  isTrending: true,
+  isGovernmentSubsidy: true,
+  isSubsidy: true,
+  subsidyDiscount: true,
+  isOnSale: true,
+  saleDiscountPercent: true,
+  gstEnabled: true,
+  gstPercentage: true,
+  festivalId: true,
+  createdAt: true,
+  updatedAt: true,
+  category: productInclude.category,
+  festival: productInclude.festival,
+};
+
 export { formatProduct, formatProductSummary };
 
 export const searchPublicProducts = async ({ q, limit = 8 } = {}) => {
@@ -307,7 +334,7 @@ export const searchPublicProducts = async ({ q, limit = 8 } = {}) => {
       isActive: true,
       AND: conditions,
     },
-    include: productInclude,
+    select: productListSelect,
     orderBy: [{ isTrending: 'desc' }, { updatedAt: 'desc' }],
     take: Math.min(Math.max(Number(limit) || 8, 1), 50),
   });
@@ -360,17 +387,19 @@ export const getPublicProducts = async ({
 
   const queryOptions = {
     where,
-    include: productInclude,
+    select: productListSelect,
     orderBy: { createdAt: 'desc' },
   };
 
   const parsedLimit = Number(limit);
   const parsedPage = Number(page);
   if (Number.isFinite(parsedLimit) && parsedLimit > 0) {
-    queryOptions.take = parsedLimit;
+    queryOptions.take = Math.min(parsedLimit, MAX_PUBLIC_PRODUCTS);
     if (Number.isFinite(parsedPage) && parsedPage > 1) {
-      queryOptions.skip = (parsedPage - 1) * parsedLimit;
+      queryOptions.skip = (parsedPage - 1) * queryOptions.take;
     }
+  } else {
+    queryOptions.take = MAX_PUBLIC_PRODUCTS;
   }
 
   const products = await prisma.product.findMany(queryOptions);
@@ -379,13 +408,13 @@ export const getPublicProducts = async ({
 };
 
 export const getFeaturedProducts = async () => {
-  return getMemoryCached('public-featured-products', 45_000, async () => {
+  return getMemoryCached(CACHE_KEYS.PUBLIC_FEATURED_PRODUCTS, 45_000, async () => {
     const baseWhere = { isActive: true };
 
     const [trendingProducts, subsidyProducts] = await Promise.all([
       prisma.product.findMany({
         where: { ...baseWhere, isTrending: true },
-        include: productInclude,
+        select: productListSelect,
         orderBy: { updatedAt: 'desc' },
         take: 12,
       }),
@@ -394,7 +423,7 @@ export const getFeaturedProducts = async () => {
           ...baseWhere,
           OR: [{ isSubsidy: true }, { isGovernmentSubsidy: true }],
         },
-        include: productInclude,
+        select: productListSelect,
         orderBy: { updatedAt: 'desc' },
         take: 12,
       }),
@@ -598,7 +627,7 @@ export const createProduct = async ({
     include: productInclude,
   });
 
-  clearMemoryCache('public-featured-products');
+  invalidatePublicProducts();
 
   return formatProduct(product);
 };
@@ -776,7 +805,7 @@ export const updateProduct = async (
     include: productInclude,
   });
 
-  clearMemoryCache('public-featured-products');
+  invalidatePublicProducts();
 
   return formatProduct(product);
 };
@@ -796,7 +825,7 @@ export const deleteProduct = async (id) => {
     videoPublicId: product.videoPublicId,
   });
 
-  clearMemoryCache('public-featured-products');
+  invalidatePublicProducts();
 
   return { message: 'Product deleted successfully' };
 };

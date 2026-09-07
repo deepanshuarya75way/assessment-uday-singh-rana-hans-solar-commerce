@@ -2,6 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useRef,
   useState,
 } from 'react';
@@ -22,12 +23,10 @@ export function ProductSearchProvider({ children }) {
   const query = normalizeSearchQuery(urlQuery);
 
   const [inputValue, setInputValue] = useState(urlQuery);
-  const [syncedUrlQuery, setSyncedUrlQuery] = useState(urlQuery);
 
-  if (urlQuery !== syncedUrlQuery) {
-    setSyncedUrlQuery(urlQuery);
+  useEffect(() => {
     setInputValue(urlQuery);
-  }
+  }, [urlQuery]);
 
   const applyQueryToUrl = useCallback(
     (value, { replace = true } = {}) => {

@@ -107,9 +107,9 @@ const formatBanner = (banner, categorySlugMap = new Map()) => {
     id: banner.id,
     position: banner.position,
     title: banner.title,
-    imageUrl: toAbsoluteMediaUrl(banner.imageUrl, banner.updatedAt, { width: 1920 }),
+    imageUrl: toAbsoluteMediaUrl(banner.imageUrl, banner.updatedAt, { width: 1600 }),
     mobileImageUrl: banner.mobileImageUrl
-      ? toAbsoluteMediaUrl(banner.mobileImageUrl, banner.updatedAt, { width: 1080 })
+      ? toAbsoluteMediaUrl(banner.mobileImageUrl, banner.updatedAt, { width: 828 })
       : null,
     isActive: banner.isActive,
     linkType,

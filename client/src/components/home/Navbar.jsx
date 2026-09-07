@@ -24,8 +24,7 @@ import {
   primaryNavLinks,
   subsidyDropdown,
 } from '@/constants/homeContent';
-import { useGetPublicCategoriesQuery } from '@/services/categoriesApi';
-import { useGetSiteMediaQuery } from '@/services/siteMediaApi';
+import { useSiteCategoriesQuery, useSiteMediaQuery } from '@/context/SiteDataContext';
 import { useEnquiryModal } from '@/context/EnquiryModalContext';
 import { lockBodyScroll, unlockBodyScroll } from '@/utils/bodyScrollLock';
 
@@ -172,7 +171,7 @@ function NavDropdown({ label, items, mobile = false, onNavigate }) {
 function ProductsNavMegaMenu() {
   const [open, setOpen] = useState(false);
   const [categorySearch, setCategorySearch] = useState('');
-  const { data } = useGetPublicCategoriesQuery();
+  const { data } = useSiteCategoriesQuery();
   const categories = data?.data?.categories ?? [];
 
   const normalizedQuery = categorySearch.trim().toLowerCase();
@@ -767,7 +766,7 @@ export default function Navbar() {
   const { openEnquiryModal } = useEnquiryModal();
   const [scrolled, setScrolled] = useState(false);
   const [logoError, setLogoError] = useState(false);
-  const { data: siteMediaResponse } = useGetSiteMediaQuery();
+  const { data: siteMediaResponse } = useSiteMediaQuery();
   const logoSrc = siteMediaResponse?.data?.logo ?? '/logo.jpg';
   const {
     inputValue,

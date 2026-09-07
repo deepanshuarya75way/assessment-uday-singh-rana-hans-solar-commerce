@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ArrowRight, Play, Youtube } from 'lucide-react';
 import useRevealOnScroll from '@/hooks/useRevealOnScroll';
 import { aboutUsContent, aboutUsVideo } from '@/constants/homeContent';
-import { useGetSiteMediaQuery } from '@/services/siteMediaApi';
+import { useSiteMediaQuery } from '@/context/SiteDataContext';
 
 function AboutUsVideo({ isVisible }) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -78,7 +78,7 @@ function AboutUsVideo({ isVisible }) {
 
 export default function WhyChooseUs() {
   const { ref: sectionRef, isVisible } = useRevealOnScroll();
-  const { data: siteMediaResponse } = useGetSiteMediaQuery();
+  const { data: siteMediaResponse } = useSiteMediaQuery();
   const logoSrc = siteMediaResponse?.data?.logo ?? '/logo.jpg';
   const [logoError, setLogoError] = useState(false);
 
