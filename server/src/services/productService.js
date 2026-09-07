@@ -168,6 +168,7 @@ const formatProduct = (product, { includeCategory = true } = {}) => {
       product.isGovernmentSubsidy || product.isSubsidy,
     ),
     isSubsidy: Boolean(product.isSubsidy || product.isGovernmentSubsidy),
+    subsidyDiscount: Number(product.subsidyDiscount) || 0,
     isOnSale: product.isOnSale ?? false,
     saleDiscountPercent: product.saleDiscountPercent ?? null,
     festivalId: product.festivalId ?? null,
@@ -227,6 +228,7 @@ const formatProductSummary = (product, { includeCategory = true } = {}) => {
       product.isGovernmentSubsidy || product.isSubsidy,
     ),
     isSubsidy: Boolean(product.isSubsidy || product.isGovernmentSubsidy),
+    subsidyDiscount: Number(product.subsidyDiscount) || 0,
     isOnSale: product.isOnSale ?? false,
     saleDiscountPercent: product.saleDiscountPercent ?? null,
     festivalId: product.festivalId ?? null,
@@ -515,6 +517,7 @@ export const createProduct = async ({
   isTrending = false,
   isGovernmentSubsidy = false,
   isSubsidy = false,
+  subsidyDiscount = 0,
   isOnSale = false,
   saleDiscountPercent = null,
   gstEnabled = false,
@@ -586,6 +589,9 @@ export const createProduct = async ({
       isTrending,
       isGovernmentSubsidy: finalSubsidy,
       isSubsidy: finalSubsidy,
+      subsidyDiscount: finalSubsidy
+        ? Math.max(0, Number(subsidyDiscount) || 0)
+        : 0,
       ...saleFields,
       ...gstFields,
     },
@@ -609,6 +615,7 @@ export const updateProduct = async (
     isTrending,
     isGovernmentSubsidy,
     isSubsidy,
+    subsidyDiscount,
     isOnSale,
     saleDiscountPercent,
     gstEnabled,
@@ -722,6 +729,22 @@ export const updateProduct = async (
         ? Boolean(isGovernmentSubsidy)
         : undefined;
 
+  const effectiveSubsidy =
+    resolvedSubsidy !== undefined
+      ? resolvedSubsidy
+      : Boolean(existingProduct.isGovernmentSubsidy || existingProduct.isSubsidy);
+
+  let subsidyDiscountUpdate = {};
+  if (resolvedSubsidy === false) {
+    subsidyDiscountUpdate = { subsidyDiscount: 0 };
+  } else if (subsidyDiscount !== undefined) {
+    subsidyDiscountUpdate = {
+      subsidyDiscount: effectiveSubsidy
+        ? Math.max(0, Number(subsidyDiscount) || 0)
+        : 0,
+    };
+  }
+
   const product = await prisma.product.update({
     where: { id },
     data: {
@@ -740,6 +763,7 @@ export const updateProduct = async (
       ...(resolvedSubsidy !== undefined
         ? { isGovernmentSubsidy: resolvedSubsidy, isSubsidy: resolvedSubsidy }
         : {}),
+      ...subsidyDiscountUpdate,
       ...saleUpdate,
       ...gstUpdate,
       images: mergedImages,

@@ -65,6 +65,10 @@ const mapProductBody = (body, files) => {
           ? body.isGovernmentSubsidy === true ||
             body.isGovernmentSubsidy === 'true'
           : undefined,
+    subsidyDiscount:
+      body.subsidyDiscount === undefined || body.subsidyDiscount === ''
+        ? undefined
+        : Number(body.subsidyDiscount),
     isOnSale:
       body.isOnSale === undefined
         ? undefined

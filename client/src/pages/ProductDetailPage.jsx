@@ -8,6 +8,9 @@ import {
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import GstPriceBreakdown from '@/components/shop/GstPriceBreakdown';
+import SubsidyPriceBreakdown, {
+  GovernmentSubsidyInfoBox,
+} from '@/components/shop/SubsidyPriceBreakdown';
 import ProductDescription from '@/components/shop/ProductDescription';
 import RelatedProductsSection from '@/components/shop/RelatedProductsSection';
 import { ProductDetailBadges } from '@/components/shop/ProductBadges';
@@ -18,7 +21,13 @@ import {
   useGetPublicProductByIdQuery,
   useGetPublicProductsQuery,
 } from '@/services/productsApi';
-import { formatCurrency, getAmountSaved, getEffectiveProductPricing, getGstPricing } from '@/utils/format';
+import {
+  formatCurrency,
+  getAmountSaved,
+  getEffectiveProductPricing,
+  getGstPricing,
+  getProductSubsidyPricing,
+} from '@/utils/format';
 import { pickRelatedProducts } from '@/utils/relatedProducts';
 
 function ProductDetailMediaGallery({ product, images }) {
@@ -144,6 +153,8 @@ export default function ProductDetailPage() {
 
   const pricing = getEffectiveProductPricing(product);
   const amountSaved = getAmountSaved(pricing);
+  const subsidyPricing = getProductSubsidyPricing(product);
+  const isSubsidyOn = subsidyPricing.isSubsidy;
   const gstPricing = getGstPricing(
     pricing.salePrice,
     product.gstEnabled,
@@ -206,7 +217,12 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            {gstPricing.gstEnabled ? (
+            {isSubsidyOn ? (
+              <div className="mt-5 space-y-4 sm:mt-6">
+                <SubsidyPriceBreakdown subsidyPricing={subsidyPricing} />
+                <GovernmentSubsidyInfoBox />
+              </div>
+            ) : gstPricing.gstEnabled ? (
               <div className="mt-5 sm:mt-6">
                 {pricing.discountPercent > 0 && (
                   <div className="mb-3 flex flex-wrap items-center gap-2">

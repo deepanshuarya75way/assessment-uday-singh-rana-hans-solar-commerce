@@ -52,6 +52,7 @@ model Product {
   isTrending      Boolean  @default(false)
   isGovernmentSubsidy Boolean @default(false)
   isSubsidy       Boolean  @default(false)
+  subsidyDiscount Float?   @default(0)
   isOnSale        Boolean  @default(false)
   saleDiscountPercent Float?
   gstEnabled      Boolean  @default(false)

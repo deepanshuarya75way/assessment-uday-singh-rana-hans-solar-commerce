@@ -67,6 +67,7 @@ export default function AdminProductFormPage() {
     isActive: true,
     isTrending: false,
     isGovernmentSubsidy: false,
+    subsidyDiscount: '',
     isOnSale: false,
     saleDiscountPercent: '',
     gstEnabled: false,
@@ -95,6 +96,7 @@ export default function AdminProductFormPage() {
       return;
     }
 
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setForm({
       name: product.name,
       description: product.description,
@@ -107,6 +109,10 @@ export default function AdminProductFormPage() {
       isGovernmentSubsidy: Boolean(
         product.isSubsidy ?? product.isGovernmentSubsidy ?? false,
       ),
+      subsidyDiscount:
+        product.subsidyDiscount != null && Number(product.subsidyDiscount) > 0
+          ? String(product.subsidyDiscount)
+          : '',
       isOnSale: product.isOnSale ?? false,
       saleDiscountPercent:
         product.saleDiscountPercent != null
@@ -235,6 +241,13 @@ export default function AdminProductFormPage() {
         nextErrors.saleDiscountPercent = 'Enter a valid sale discount percentage';
       } else if (salePercent <= 0 || salePercent >= 100) {
         nextErrors.saleDiscountPercent = 'Sale discount must be between 1 and 99';
+      }
+    }
+
+    if (form.isGovernmentSubsidy && form.subsidyDiscount !== '') {
+      const subsidyAmount = Number(form.subsidyDiscount);
+      if (Number.isNaN(subsidyAmount) || subsidyAmount < 0) {
+        nextErrors.subsidyDiscount = 'Subsidy discount must be a non-negative amount';
       }
     }
 
@@ -423,6 +436,12 @@ export default function AdminProductFormPage() {
     formData.append('isTrending', String(form.isTrending));
     formData.append('isGovernmentSubsidy', String(form.isGovernmentSubsidy));
     formData.append('isSubsidy', String(form.isGovernmentSubsidy));
+    formData.append(
+      'subsidyDiscount',
+      form.isGovernmentSubsidy && form.subsidyDiscount !== ''
+        ? String(form.subsidyDiscount)
+        : '0',
+    );
     formData.append('isOnSale', String(form.isOnSale));
     if (form.isOnSale) {
       formData.append('saleDiscountPercent', form.saleDiscountPercent);
@@ -689,9 +708,17 @@ export default function AdminProductFormPage() {
                   role="switch"
                   aria-checked={form.isGovernmentSubsidy}
                   checked={form.isGovernmentSubsidy}
-                  onChange={(event) =>
-                    updateField('isGovernmentSubsidy', event.target.checked)
-                  }
+                  onChange={(event) => {
+                    const checked = event.target.checked;
+                    updateField('isGovernmentSubsidy', checked);
+                    if (!checked) {
+                      updateField('subsidyDiscount', '');
+                      setErrors((current) => ({
+                        ...current,
+                        subsidyDiscount: '',
+                      }));
+                    }
+                  }}
                   className="peer sr-only"
                 />
                 <span className="h-6 w-11 rounded-full bg-slate-300 transition peer-checked:bg-emerald-600 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald-400 peer-focus-visible:ring-offset-2" />
@@ -699,6 +726,48 @@ export default function AdminProductFormPage() {
               </label>
             </div>
           </div>
+
+          {form.isGovernmentSubsidy && (
+            <div className="mt-4 border-t border-slate-200/70 pt-4">
+              <label
+                htmlFor="subsidy-discount"
+                className="mb-2 block text-sm font-semibold text-slate-700"
+              >
+                Subsidy Discount
+              </label>
+              <div className="relative max-w-xs">
+                <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5 text-sm font-medium text-slate-500">
+                  ₹
+                </span>
+                <input
+                  id="subsidy-discount"
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={form.subsidyDiscount}
+                  onChange={(event) => {
+                    updateField('subsidyDiscount', event.target.value);
+                    if (errors.subsidyDiscount) {
+                      setErrors((current) => ({
+                        ...current,
+                        subsidyDiscount: '',
+                      }));
+                    }
+                  }}
+                  placeholder="78000"
+                  className="w-full rounded-xl border border-slate-200 pl-8 pr-4 py-3 text-sm outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+                />
+              </div>
+              <p className="mt-1.5 text-xs text-slate-500">
+                Enter only the subsidy discount amount (e.g. ₹78,000). The subsidy description is hard-coded on the frontend.
+              </p>
+              {errors.subsidyDiscount && (
+                <p className="mt-1 text-xs text-red-600">
+                  {errors.subsidyDiscount}
+                </p>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5">
