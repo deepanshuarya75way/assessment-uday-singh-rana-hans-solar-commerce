@@ -8,6 +8,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import PageHeader from '@/admin/components/ui/PageHeader';
+import RichTextEditor from '@/admin/components/RichTextEditor';
 import {
   useCreateCategoryMutation,
   useGetAdminCategoryByIdQuery,
@@ -29,6 +30,7 @@ export default function AdminCategoryFormPage() {
   const [updateCategory, { isLoading: isUpdating }] = useUpdateCategoryMutation();
 
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [existingImage, setExistingImage] = useState('');
   const [previewUrl, setPreviewUrl] = useState('');
@@ -44,8 +46,10 @@ export default function AdminCategoryFormPage() {
       return;
     }
 
-    setName(category.name);
-    setIsActive(category.isActive);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setName(category.name || '');
+    setDescription(category.description || '');
+    setIsActive(category.isActive ?? true);
     setExistingImage(category.image || '');
   }, [category]);
 
@@ -117,6 +121,7 @@ export default function AdminCategoryFormPage() {
 
     const formData = new FormData();
     formData.append('name', name.trim());
+    formData.append('description', description.trim());
     formData.append('isActive', String(isActive));
 
     if (selectedFile) {
@@ -164,7 +169,7 @@ export default function AdminCategoryFormPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="max-w-2xl space-y-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+        className="max-w-2xl space-y-6 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm"
       >
         {submitError && (
           <div className="flex items-start gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -190,6 +195,20 @@ export default function AdminCategoryFormPage() {
           {errors.name && (
             <p className="mt-1 text-xs text-red-600">{errors.name}</p>
           )}
+        </div>
+
+        <div>
+          <label className="mb-1.5 block text-sm font-semibold text-slate-700">
+            Category Description
+          </label>
+          <p className="mb-2 text-xs text-slate-500">
+            Rich-text overview displayed directly below the category title on the shop page. Use headings, bullet lists, bold text, and links to highlight key benefits.
+          </p>
+          <RichTextEditor
+            value={description}
+            onChange={(val) => setDescription(val)}
+            placeholder="Introduce this category, key benefits, and recommended solutions..."
+          />
         </div>
 
         <div>
@@ -278,18 +297,18 @@ export default function AdminCategoryFormPage() {
           </label>
         </div>
 
-        <div className="flex flex-wrap gap-3 border-t border-slate-100 pt-6">
+        <div className="flex flex-col gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:flex-wrap">
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-3 text-sm font-semibold text-slate-900 transition hover:from-amber-300 hover:to-orange-400 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-amber-400 to-orange-500 px-5 py-2.5 text-sm font-semibold text-slate-900 transition hover:from-amber-300 hover:to-orange-400 disabled:cursor-not-allowed disabled:opacity-60 sm:min-h-[48px]"
           >
             {isSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {isEditing ? 'Save Changes' : 'Create Category'}
           </button>
           <Link
             to="/admin/categories"
-            className="inline-flex items-center rounded-xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+            className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:min-h-[48px]"
           >
             Cancel
           </Link>
