@@ -451,3 +451,30 @@ a {
     width: 100%;
   }
 }
+
+@keyframes ticker-ltr {
+  0% {
+    transform: translate3d(-50%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0%, 0, 0);
+  }
+}
+
+.animate-ticker-ltr {
+  display: flex;
+  width: max-content;
+  will-change: transform;
+  animation: ticker-ltr 35s linear infinite;
+}
+
+@media (max-width: 640px) {
+  .animate-ticker-ltr {
+    animation-duration: 25s;
+  }
+}
+
+.animate-ticker-ltr:hover,
+.animate-ticker-ltr:active {
+  animation-play-state: paused;
+}

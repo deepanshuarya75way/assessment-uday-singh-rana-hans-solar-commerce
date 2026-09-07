@@ -17,7 +17,13 @@ import {
 import Button from '@/components/ui/Button';
 import NavbarSearchBox from '@/components/home/NavbarSearchBox';
 import useProductSearch from '@/hooks/useProductSearch';
-import { contactInfo, navDropdowns, navLinks } from '@/constants/homeContent';
+import {
+  contactInfo,
+  contactLink,
+  learnDropdown,
+  primaryNavLinks,
+  subsidyDropdown,
+} from '@/constants/homeContent';
 import { useGetPublicCategoriesQuery } from '@/services/categoriesApi';
 import { useGetSiteMediaQuery } from '@/services/siteMediaApi';
 import { useEnquiryModal } from '@/context/EnquiryModalContext';
@@ -115,7 +121,7 @@ function NavDropdown({ label, items, mobile = false, onNavigate }) {
     >
       <button
         type="button"
-        className="group relative flex items-center gap-1 rounded-lg px-3 py-2.5 text-[14px] font-medium text-slate-600 transition-colors duration-200 hover:text-solar-700 lg:text-[15px]"
+        className="group relative inline-flex items-center gap-1 rounded-lg px-3.5 py-2.5 text-[15px] font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50/80 hover:text-solar-700 lg:gap-1 lg:px-4 lg:py-3 lg:text-[16px]"
         onClick={() => setOpen((prev) => !prev)}
         aria-expanded={open}
       >
@@ -355,21 +361,35 @@ function ProductsNavMegaMenu() {
 }
 
 function TopContactBar({ onBookSurvey }) {
+  const phoneNumbers = contactInfo.phoneNumbers || [
+    { phone: '9358622621', display: '+91 93586 22621' },
+    { phone: '9058936186', display: '+91 90589 36186' },
+    { phone: '9058951234', display: '+91 90589 51234' },
+  ];
+
   return (
-    <div className="border-b border-slate-200/70 bg-slate-50/95">
+    <div className="hidden sm:block border-b border-slate-200/70 bg-slate-50/95">
       <div className="mx-auto flex h-11 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-12 lg:px-8">
         <div className="flex min-w-0 items-center gap-3 text-xs font-medium text-slate-600">
-          <a
-            href={`tel:+91${contactInfo.phone}`}
-            className="inline-flex items-center gap-1.5 transition-colors hover:text-solar-700"
-          >
-            <Phone className="h-3.5 w-3.5 shrink-0 text-solar-600" aria-hidden="true" />
-            <span className="truncate">{contactInfo.phoneDisplay}</span>
-          </a>
-          <span className="hidden h-3.5 w-px shrink-0 bg-slate-300 md:block" aria-hidden="true" />
+          {phoneNumbers.map((p, idx) => (
+            <span key={p.phone} className="inline-flex items-center gap-2">
+              <a
+                href={`tel:+91${p.phone}`}
+                className="inline-flex items-center gap-1.5 whitespace-nowrap transition-colors hover:text-solar-700"
+              >
+                <Phone className="h-3.5 w-3.5 shrink-0 text-solar-600" aria-hidden="true" />
+                <span>{p.display}</span>
+              </a>
+              {idx < phoneNumbers.length - 1 && (
+                <span className="h-3.5 w-px shrink-0 bg-slate-300" aria-hidden="true" />
+              )}
+            </span>
+          ))}
+
+          <span className="hidden h-3.5 w-px shrink-0 bg-slate-300 xl:block" aria-hidden="true" />
           <a
             href={`mailto:${contactInfo.email}`}
-            className="hidden min-w-0 items-center gap-1.5 transition-colors hover:text-solar-700 md:inline-flex"
+            className="hidden min-w-0 items-center gap-1.5 whitespace-nowrap transition-colors hover:text-solar-700 xl:inline-flex"
           >
             <Mail className="h-3.5 w-3.5 shrink-0 text-solar-600" aria-hidden="true" />
             <span className="truncate">{contactInfo.email}</span>
@@ -397,13 +417,10 @@ function DesktopNavbar({
   handleChange,
   handleSubmit,
   clearSearch,
-  onBookSurvey,
   onDistributor,
 }) {
   return (
     <div className="hidden lg:block">
-      <TopContactBar onBookSurvey={onBookSurvey} />
-
       <header
         className={`sticky top-0 z-50 transition-all duration-300 ease-out ${
           scrolled
@@ -437,7 +454,8 @@ function DesktopNavbar({
 
               <div className="flex min-w-0 flex-1 items-center justify-end gap-0.5 xl:gap-1">
                 <nav className="flex shrink-0 items-center">
-                  {navLinks.map(({ label, path, icon }) => (
+                  {/* Position 1 & 2: Home, Shop */}
+                  {primaryNavLinks.map(({ label, path, icon }) => (
                     <NavLink key={path} to={path} end={path === '/'} className={navLinkClass}>
                       {({ isActive }) => (
                         <>
@@ -448,10 +466,26 @@ function DesktopNavbar({
                       )}
                     </NavLink>
                   ))}
+
+                  {/* Position 3: Subsidy (Interchanged from position 6 to position 3) */}
+                  <NavDropdown {...subsidyDropdown} />
+
+                  {/* Position 4: Products */}
                   <ProductsNavMegaMenu />
-                  {navDropdowns.map((dropdown) => (
-                    <NavDropdown key={dropdown.label} {...dropdown} />
-                  ))}
+
+                  {/* Position 5: Learn */}
+                  <NavDropdown {...learnDropdown} />
+
+                  {/* Position 6: Contact (Interchanged from position 3 to position 6) */}
+                  <NavLink to={contactLink.path} className={navLinkClass}>
+                    {({ isActive }) => (
+                      <>
+                        <NavIcon iconName={contactLink.icon} isActive={isActive} />
+                        {contactLink.label}
+                        <NavLinkIndicator isActive={isActive} />
+                      </>
+                    )}
+                  </NavLink>
                 </nav>
 
                 <NavbarSearchBox
@@ -636,24 +670,33 @@ function MobileNavbar({
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 py-3">
-          <div className="mb-4 space-y-2.5 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
-            <a
-              href={`tel:+91${contactInfo.phone}`}
-              className="flex min-h-[44px] items-center gap-2.5 text-sm font-medium text-slate-700"
-            >
-              <Phone className="h-4 w-4 shrink-0 text-solar-600" />
-              {contactInfo.phoneDisplay}
-            </a>
+          <div className="mb-4 space-y-2 rounded-xl border border-slate-100 bg-slate-50/80 p-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Call Us</p>
+            {(contactInfo.phoneNumbers || [
+              { phone: '9358622621', display: '+91 93586 22621' },
+              { phone: '9058936186', display: '+91 90589 36186' },
+              { phone: '9058951234', display: '+91 90589 51234' },
+            ]).map((p) => (
+              <a
+                key={p.phone}
+                href={`tel:+91${p.phone}`}
+                className="flex min-h-[40px] items-center gap-2.5 text-sm font-medium text-slate-700 transition-colors hover:text-solar-700"
+              >
+                <Phone className="h-4 w-4 shrink-0 text-solar-600" />
+                {p.display}
+              </a>
+            ))}
             <a
               href={`mailto:${contactInfo.email}`}
-              className="flex min-h-[44px] items-center gap-2.5 text-sm font-medium text-slate-700"
+              className="flex min-h-[40px] items-center gap-2.5 border-t border-slate-200/60 pt-2 text-sm font-medium text-slate-700 transition-colors hover:text-solar-700"
             >
               <Mail className="h-4 w-4 shrink-0 text-solar-600" />
               <span className="break-all">{contactInfo.email}</span>
             </a>
           </div>
 
-          {navLinks.map(({ label, path, icon }) => {
+          {/* Position 1 & 2: Home, Shop */}
+          {primaryNavLinks.map(({ label, path, icon }) => {
             const Icon = navLinkIcons[icon];
 
             return (
@@ -668,6 +711,16 @@ function MobileNavbar({
               </Link>
             );
           })}
+
+          {/* Position 3: Subsidy (Interchanged from position 6 to position 3) */}
+          <NavDropdown
+            key={subsidyDropdown.label}
+            {...subsidyDropdown}
+            mobile
+            onNavigate={closeMenu}
+          />
+
+          {/* Position 4: Products */}
           <Link
             to="/shop/categories"
             onClick={closeMenu}
@@ -676,14 +729,24 @@ function MobileNavbar({
             <Layers className="h-4 w-4 text-solar-600" aria-hidden="true" />
             Products
           </Link>
-          {navDropdowns.map((dropdown) => (
-            <NavDropdown
-              key={dropdown.label}
-              {...dropdown}
-              mobile
-              onNavigate={closeMenu}
-            />
-          ))}
+
+          {/* Position 5: Learn */}
+          <NavDropdown
+            key={learnDropdown.label}
+            {...learnDropdown}
+            mobile
+            onNavigate={closeMenu}
+          />
+
+          {/* Position 6: Contact (Interchanged from position 3 to position 6) */}
+          <Link
+            to={contactLink.path}
+            onClick={closeMenu}
+            className="flex min-h-[48px] items-center gap-2.5 border-b border-slate-100 py-3 text-[15px] font-medium text-slate-800 transition-colors active:bg-solar-50"
+          >
+            <MessageCircle className="h-4 w-4 text-solar-600" aria-hidden="true" />
+            {contactLink.label}
+          </Link>
         </div>
 
         <div className="border-t border-slate-100 p-4">
@@ -742,6 +805,7 @@ export default function Navbar() {
 
   return (
     <>
+      <TopContactBar onBookSurvey={handleBookSurvey} />
       <DesktopNavbar {...sharedProps} onDistributor={handleDistributor} />
       <MobileNavbar {...sharedProps} />
     </>

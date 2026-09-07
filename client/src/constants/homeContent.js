@@ -1,36 +1,40 @@
-export const navLinks = [
+export const contactLink = { label: 'Contact', path: '/contact', icon: 'MessageCircle' };
+
+export const primaryNavLinks = [
   { label: 'Home', path: '/', icon: 'Home' },
   { label: 'Shop', path: '/shop', icon: 'ShoppingBag' },
-  { label: 'Contact', path: '/contact', icon: 'MessageCircle' },
 ];
 
-export const navDropdowns = [
-  {
-    label: 'Learn',
-    items: [
-      {
-        label: 'Solar Buying Guide',
-        path: '/learn/solar-buying-guide',
-        description: 'Choose the right solar system for your needs',
-      },
-    ],
-  },
-  {
-    label: 'Subsidy',
-    items: [
-      {
-        label: 'Subsidy Products',
-        path: '/subsidy/products',
-        description: 'Explore solar products eligible for government subsidies',
-      },
-      {
-        label: 'PM Surya Ghar Yojana',
-        path: '/subsidy/pm-surya-ghar',
-        description: 'Residential rooftop solar subsidy scheme',
-      },
-    ],
-  },
-];
+export const navLinks = [...primaryNavLinks, contactLink];
+
+export const learnDropdown = {
+  label: 'Learn',
+  items: [
+    {
+      label: 'Solar Buying Guide',
+      path: '/learn/solar-buying-guide',
+      description: 'Choose the right solar system for your needs',
+    },
+  ],
+};
+
+export const subsidyDropdown = {
+  label: 'Subsidy',
+  items: [
+    {
+      label: 'Subsidy Products',
+      path: '/subsidy/products',
+      description: 'Explore solar products eligible for government subsidies',
+    },
+    {
+      label: 'PM Surya Ghar Yojana',
+      path: '/subsidy/pm-surya-ghar',
+      description: 'Residential rooftop solar subsidy scheme',
+    },
+  ],
+};
+
+export const navDropdowns = [learnDropdown, subsidyDropdown];
 
 export const trustFeatures = [
   {
@@ -103,20 +107,33 @@ export const learnCards = [
 ];
 
 export const corporateOffice = {
+  name: 'HANS SOLAR',
   address:
-    '1st Floor, Balaji Complex, Near Purana Roadways Bus Stand, Opposite Dal Mandi, Sheetal Ganj, Bulandshahr - 203001, Uttar Pradesh',
+    '1st Floor, Balaji Complex, Near Purana Roadways Bus Stand, Bulandshahr - 203001, Uttar Pradesh',
+  formattedLines: [
+    '☀️ HANS SOLAR ♻️',
+    '1st Floor, Balaji Complex,',
+    'Near Purana Roadways Bus Stand,',
+    'Bulandshahr 203001, UP 🇮🇳',
+    'Bulandshahr, Uttar Pradesh 203001',
+  ],
   mapsQuery:
-    'Balaji Complex, Sheetal Ganj, Bulandshahr 203001, Uttar Pradesh',
+    'HANS SOLAR, 1st Floor, Balaji Complex, Near Purana Roadways Bus Stand, Bulandshahr 203001, Uttar Pradesh',
   directionsUrl:
-    'https://www.google.com/maps/dir/?api=1&destination=1st+Floor,+Balaji+Complex,+Near+Purana+Roadways+Bus+Stand,+Opposite+Dal+Mandi,+Sheetal+Ganj,+Bulandshahr+-+203001,+Uttar+Pradesh',
+    'https://www.google.com/maps/search/?api=1&query=HANS+SOLAR%2C+1st+Floor%2C+Balaji+Complex%2C+Near+Purana+Roadways+Bus+Stand%2C+Bulandshahr+203001%2C+Uttar+Pradesh',
   embedUrl:
-    'https://www.google.com/maps?q=Balaji+Complex,+Sheetal+Ganj,+Bulandshahr+203001,+Uttar+Pradesh&output=embed',
+    'https://www.google.com/maps?q=HANS+SOLAR%2C+1st+Floor%2C+Balaji+Complex%2C+Near+Purana+Roadways+Bus+Stand%2C+Bulandshahr+203001%2C+Uttar+Pradesh&output=embed',
 };
 
 export const contactInfo = {
   email: 'hanssolarenergy@gmail.com',
   phone: '9358622621',
   phoneDisplay: '+91 93586 22621',
+  phoneNumbers: [
+    { phone: '9358622621', display: '+91 93586 22621' },
+    { phone: '9058936186', display: '+91 90589 36186' },
+    { phone: '9058951234', display: '+91 90589 51234' },
+  ],
 };
 
 export const aboutUsVideo = {
