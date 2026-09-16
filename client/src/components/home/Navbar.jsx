@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import {
   ArrowRight,
@@ -76,6 +76,35 @@ function NavIcon({ iconName, isActive }) {
 
 function NavDropdown({ label, items, mobile = false, onNavigate }) {
   const [open, setOpen] = useState(false);
+  const closeTimerRef = useRef(null);
+
+  const cancelCloseTimer = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  const scheduleClose = () => {
+    cancelCloseTimer();
+    closeTimerRef.current = setTimeout(() => {
+      setOpen(false);
+      closeTimerRef.current = null;
+    }, 150);
+  };
+
+  const handleOpen = () => {
+    cancelCloseTimer();
+    setOpen(true);
+  };
+
+  const handleLinkClick = () => {
+    cancelCloseTimer();
+    setOpen(false);
+    onNavigate?.();
+  };
+
+  useEffect(() => () => cancelCloseTimer(), []);
 
   if (mobile) {
     return (
@@ -92,7 +121,9 @@ function NavDropdown({ label, items, mobile = false, onNavigate }) {
         </button>
         <div
           className={`overflow-hidden transition-all duration-300 ease-out ${
-            open ? 'max-h-96 pb-3 opacity-100' : 'max-h-0 opacity-0'
+            open
+              ? 'max-h-96 pb-3 opacity-100'
+              : 'pointer-events-none max-h-0 opacity-0'
           }`}
         >
           <div className="max-h-72 space-y-0.5 overflow-y-auto pl-3">
@@ -100,7 +131,7 @@ function NavDropdown({ label, items, mobile = false, onNavigate }) {
               <Link
                 key={item.path}
                 to={item.path}
-                onClick={onNavigate}
+                onClick={handleLinkClick}
                 className="block min-h-[44px] rounded-lg px-3 py-2.5 text-sm text-slate-600 transition-colors hover:bg-solar-50 hover:text-solar-700"
               >
                 {item.label}
@@ -115,13 +146,16 @@ function NavDropdown({ label, items, mobile = false, onNavigate }) {
   return (
     <div
       className="relative"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={handleOpen}
+      onMouseLeave={scheduleClose}
     >
       <button
         type="button"
         className="group relative inline-flex items-center gap-1 rounded-lg px-3.5 py-2.5 text-[15px] font-medium text-slate-600 transition-all duration-200 hover:bg-slate-50/80 hover:text-solar-700 lg:gap-1 lg:px-4 lg:py-3 lg:text-[16px]"
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => {
+          cancelCloseTimer();
+          setOpen((prev) => !prev);
+        }}
         aria-expanded={open}
       >
         {label}
@@ -151,6 +185,7 @@ function NavDropdown({ label, items, mobile = false, onNavigate }) {
               <Link
                 key={item.path}
                 to={item.path}
+                onClick={handleLinkClick}
                 className="block border-b border-slate-50 px-4 py-3.5 transition-colors last:border-b-0 hover:bg-solar-50/80"
               >
                 <p className="text-sm font-semibold text-slate-800">{item.label}</p>

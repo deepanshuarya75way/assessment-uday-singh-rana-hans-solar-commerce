@@ -25,7 +25,7 @@ import {
   formatCurrency,
   getAmountSaved,
   getEffectiveProductPricing,
-  getGstPricing,
+  getProductGstDisplayPricing,
   getProductSubsidyPricing,
 } from '@/utils/format';
 import { pickRelatedProducts } from '@/utils/relatedProducts';
@@ -152,14 +152,12 @@ export default function ProductDetailPage() {
   }
 
   const pricing = getEffectiveProductPricing(product);
-  const amountSaved = getAmountSaved(pricing);
   const subsidyPricing = getProductSubsidyPricing(product);
   const isSubsidyOn = subsidyPricing.isSubsidy;
-  const gstPricing = getGstPricing(
-    pricing.salePrice,
-    product.gstEnabled,
-    product.gstPercentage,
-  );
+  const gstDisplayPricing = getProductGstDisplayPricing(product);
+  const amountSaved = gstDisplayPricing.hasNormalDiscount
+    ? gstDisplayPricing.normalDiscountAmount
+    : getAmountSaved(pricing);
 
   return (
     <div className="bg-gray-50 pb-8 sm:pb-10">
@@ -222,29 +220,22 @@ export default function ProductDetailPage() {
                 <SubsidyPriceBreakdown subsidyPricing={subsidyPricing} />
                 <GovernmentSubsidyInfoBox />
               </div>
-            ) : gstPricing.gstEnabled ? (
+            ) : gstDisplayPricing.gstEnabled ? (
               <div className="mt-5 sm:mt-6">
-                {pricing.discountPercent > 0 && (
-                  <div className="mb-3 flex flex-wrap items-center gap-2">
-                    <span className="text-sm text-gray-400 line-through">
-                      {formatCurrency(pricing.originalPrice)}
-                    </span>
-                    <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
-                      {pricing.discountPercent}% OFF
-                    </span>
-                    {amountSaved > 0 && (
-                      <span className="text-xs font-medium text-emerald-600">
-                        Save {formatCurrency(amountSaved)}
-                      </span>
-                    )}
-                  </div>
-                )}
                 <GstPriceBreakdown
-                  actualPrice={pricing.salePrice}
-                  gstPercentage={gstPricing.gstPercentage}
-                  gstAmount={gstPricing.gstAmount}
-                  finalPrice={gstPricing.finalPrice}
+                  actualPrice={gstDisplayPricing.actualPrice}
+                  gstPercentage={gstDisplayPricing.gstPercentage}
+                  gstAmount={gstDisplayPricing.gstAmount}
+                  finalPrice={gstDisplayPricing.finalPrice}
+                  hasNormalDiscount={gstDisplayPricing.hasNormalDiscount}
+                  normalDiscountAmount={gstDisplayPricing.normalDiscountAmount}
+                  normalDiscountPercent={gstDisplayPricing.normalDiscountPercent}
                 />
+                {amountSaved > 0 && (
+                  <p className="mt-3 text-xs font-medium text-emerald-600 sm:text-sm">
+                    Save {formatCurrency(amountSaved)}
+                  </p>
+                )}
               </div>
             ) : (
               <div className="mt-5 flex flex-wrap items-end gap-x-2 gap-y-1 sm:mt-6 sm:gap-x-3 sm:gap-y-2">

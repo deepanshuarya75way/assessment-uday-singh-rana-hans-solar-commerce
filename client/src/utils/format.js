@@ -31,6 +31,48 @@ export const getEffectiveProductPricing = (product) => getNormalProductPricing(p
 export const getAmountSaved = (pricing) =>
   pricing.discountPercent > 0 ? pricing.originalPrice - pricing.salePrice : 0;
 
+export const getProductGstDisplayPricing = (product) => {
+  if (!product) {
+    return {
+      actualPrice: 0,
+      normalDiscountAmount: 0,
+      normalDiscountPercent: 0,
+      priceAfterDiscount: 0,
+      gstEnabled: false,
+      gstPercentage: 0,
+      gstAmount: 0,
+      finalPrice: 0,
+      hasNormalDiscount: false,
+    };
+  }
+
+  const normalPricing = getNormalProductPricing(product);
+  const actualPrice = normalPricing.originalPrice;
+  const gstPricing = getGstPricing(
+    actualPrice,
+    product.gstEnabled,
+    product.gstPercentage,
+  );
+  const priceWithGst = gstPricing.finalPrice;
+  const hasNormalDiscount = normalPricing.discountPercent > 0;
+  const priceAfterDiscount = hasNormalDiscount
+    ? getDiscountedPrice(priceWithGst, normalPricing.discountPercent)
+    : priceWithGst;
+  const normalDiscountAmount = Math.max(0, priceWithGst - priceAfterDiscount);
+
+  return {
+    actualPrice,
+    normalDiscountAmount: Math.round(normalDiscountAmount),
+    normalDiscountPercent: normalPricing.discountPercent,
+    priceAfterDiscount: Math.round(priceAfterDiscount),
+    gstEnabled: gstPricing.gstEnabled,
+    gstPercentage: gstPricing.gstPercentage,
+    gstAmount: Math.round(gstPricing.gstAmount),
+    finalPrice: Math.round(priceAfterDiscount),
+    hasNormalDiscount,
+  };
+};
+
 export const getProductSubsidyPricing = (product) => {
   if (!product) {
     return {
@@ -39,7 +81,6 @@ export const getProductSubsidyPricing = (product) => {
       normalDiscountPercent: 0,
       priceAfterDiscount: 0,
       subsidyDiscount: 0,
-      priceBeforeGst: 0,
       gstEnabled: false,
       gstPercentage: 0,
       gstAmount: 0,
@@ -59,34 +100,32 @@ export const getProductSubsidyPricing = (product) => {
     : 0;
 
   const originalPrice = normalPricing.originalPrice;
-  const priceAfterDiscount = normalPricing.salePrice;
-  const normalDiscountAmount = Math.max(0, originalPrice - priceAfterDiscount);
-  const priceBeforeGst = Math.max(0, priceAfterDiscount - subsidyDiscount);
-
   const gstPricing = getGstPricing(
-    priceBeforeGst,
+    originalPrice,
     product.gstEnabled,
     product.gstPercentage,
   );
-
-  const gstAmount = Math.round(gstPricing.gstAmount);
-  const finalPrice = priceBeforeGst + gstAmount;
+  const priceWithGst = gstPricing.finalPrice;
+  const hasNormalDiscount = normalPricing.discountPercent > 0;
+  const priceAfterDiscount = hasNormalDiscount
+    ? getDiscountedPrice(priceWithGst, normalPricing.discountPercent)
+    : priceWithGst;
+  const normalDiscountAmount = Math.max(0, priceWithGst - priceAfterDiscount);
+  const finalPrice = Math.max(0, priceAfterDiscount - subsidyDiscount);
   const totalSavings = normalDiscountAmount + subsidyDiscount;
   const hasSubsidyDiscount = isSubsidy && subsidyDiscount > 0;
-  const hasNormalDiscount = normalDiscountAmount > 0;
 
   return {
     originalPrice,
-    normalDiscountAmount,
+    normalDiscountAmount: Math.round(normalDiscountAmount),
     normalDiscountPercent: normalPricing.discountPercent,
-    priceAfterDiscount,
+    priceAfterDiscount: Math.round(priceAfterDiscount),
     subsidyDiscount,
-    priceBeforeGst,
     gstEnabled: gstPricing.gstEnabled,
     gstPercentage: gstPricing.gstPercentage,
-    gstAmount,
-    finalPrice,
-    totalSavings,
+    gstAmount: Math.round(gstPricing.gstAmount),
+    finalPrice: Math.round(finalPrice),
+    totalSavings: Math.round(totalSavings),
     isSubsidy,
     hasSubsidyDiscount,
     hasNormalDiscount,

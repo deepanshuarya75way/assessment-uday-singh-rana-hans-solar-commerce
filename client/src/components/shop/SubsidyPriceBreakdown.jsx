@@ -33,7 +33,6 @@ export default function SubsidyPriceBreakdown({ subsidyPricing }) {
     normalDiscountPercent,
     priceAfterDiscount,
     subsidyDiscount,
-    priceBeforeGst,
     gstEnabled,
     gstPercentage,
     gstAmount,
@@ -58,6 +57,17 @@ export default function SubsidyPriceBreakdown({ subsidyPricing }) {
             {formatCurrency(originalPrice)}
           </span>
         </div>
+
+        {Boolean(gstEnabled) && (
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-medium text-slate-600">
+              GST ({gstPercentage}%)
+            </span>
+            <span className="font-semibold tabular-nums text-slate-900">
+              {formatCurrency(gstAmount)}
+            </span>
+          </div>
+        )}
 
         {/* Existing Normal Product Discount (if any) */}
         {hasNormalDiscount && (
@@ -100,32 +110,10 @@ export default function SubsidyPriceBreakdown({ subsidyPricing }) {
             </span>
           </div>
 
-          <div className="flex items-center justify-between border-t border-dashed border-emerald-200/90 pt-2 text-xs sm:text-sm">
-            <span className="font-medium text-slate-700">
-              Price Before GST
-            </span>
-            <span className="font-bold tabular-nums text-slate-900">
-              {formatCurrency(priceBeforeGst)}
-            </span>
-          </div>
         </div>
       </div>
 
-      {/* 3. GST (existing configured rate) */}
-      {Boolean(gstEnabled) && (
-        <div className="border-b border-slate-200/80 bg-white px-4 py-3 sm:px-5 sm:py-3.5">
-          <div className="flex items-center justify-between text-xs sm:text-sm">
-            <span className="font-medium text-slate-600">
-              GST ({gstPercentage}%)
-            </span>
-            <span className="font-semibold tabular-nums text-slate-800">
-              + {formatCurrency(gstAmount)}
-            </span>
-          </div>
-        </div>
-      )}
-
-      {/* 4. FINAL PRICE AFTER SUBSIDY & GST */}
+      {/* 3. FINAL PRICE AFTER SUBSIDY & GST */}
       <div className="bg-slate-50/80 px-4 py-4 sm:px-5 sm:py-5">
         <div className="flex items-baseline justify-between gap-2">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-700 sm:text-sm">

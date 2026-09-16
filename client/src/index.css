@@ -710,6 +710,7 @@ a {
   width: max-content;
   will-change: transform;
   animation: ticker-ltr 35s linear infinite;
+  animation-direction: reverse;
 }
 
 @media (max-width: 640px) {
