@@ -2,10 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2, SearchX } from 'lucide-react';
 import ProductSearchInput from '@/components/shop/ProductSearchInput';
-import { useSearchPublicProductsQuery } from '@/services/productsApi';
+import {
+  prefetchProductDetailPage,
+  usePrefetchPublicProductById,
+  useSearchPublicProductsQuery,
+} from '@/services/productsApi';
 import { normalizeSearchQuery } from '@/utils/productSearch';
 
-function NavbarSearchSuggestions({ results, isLoading, query, onSelect }) {
+function NavbarSearchSuggestions({ results, isLoading, query, onSelect, onPrefetchProduct }) {
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_16px_40px_rgba(15,23,42,0.12)]">
       <div className="max-h-[min(20rem,50vh)] overflow-y-auto overscroll-contain">
@@ -30,7 +34,11 @@ function NavbarSearchSuggestions({ results, isLoading, query, onSelect }) {
               <li key={product.id}>
                 <Link
                   to={`/shop/product/${product.id}`}
-                  onMouseDown={(event) => event.preventDefault()}
+                  onPointerEnter={() => onPrefetchProduct?.(product.id)}
+                  onMouseDown={(event) => {
+                    event.preventDefault();
+                    onPrefetchProduct?.(product.id);
+                  }}
                   onClick={onSelect}
                   className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-solar-50/80"
                 >
@@ -76,6 +84,16 @@ export default function NavbarSearchBox({
   const [focused, setFocused] = useState(false);
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const containerRef = useRef(null);
+  const prefetchProductById = usePrefetchPublicProductById();
+
+  const prefetchProductDetail = (productId) => {
+    if (!productId) {
+      return;
+    }
+
+    prefetchProductDetailPage();
+    prefetchProductById(productId);
+  };
 
   const isDesktop = variant === 'desktop';
   const normalizedQuery = normalizeSearchQuery(value);
@@ -181,6 +199,7 @@ export default function NavbarSearchBox({
             isLoading={isLoading}
             query={normalizedQuery}
             onSelect={handleSelect}
+            onPrefetchProduct={prefetchProductDetail}
           />
         </div>
       )}
@@ -206,7 +225,11 @@ export default function NavbarSearchBox({
                   <li key={product.id}>
                     <Link
                       to={`/shop/product/${product.id}`}
-                      onMouseDown={(event) => event.preventDefault()}
+                      onPointerEnter={() => prefetchProductDetail(product.id)}
+                      onMouseDown={(event) => {
+                        event.preventDefault();
+                        prefetchProductDetail(product.id);
+                      }}
                       onClick={handleSelect}
                       className="flex items-center gap-3 px-3 py-2.5 transition-colors hover:bg-solar-50/80"
                     >

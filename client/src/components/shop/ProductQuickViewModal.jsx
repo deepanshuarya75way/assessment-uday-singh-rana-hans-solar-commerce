@@ -4,6 +4,10 @@ import { ArrowRight, X } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import ProductDescription from '@/components/shop/ProductDescription';
 import { ProductCardBadges } from '@/components/shop/ProductBadges';
+import {
+  prefetchProductDetailPage,
+  usePrefetchPublicProductById,
+} from '@/services/productsApi';
 import { lockBodyScroll, unlockBodyScroll } from '@/utils/bodyScrollLock';
 import {
   formatCurrency,
@@ -14,6 +18,17 @@ export default function ProductQuickViewModal({
   product,
   onClose,
 }) {
+  const prefetchProductById = usePrefetchPublicProductById();
+
+  useEffect(() => {
+    if (!product?.id) {
+      return undefined;
+    }
+
+    prefetchProductDetailPage();
+    prefetchProductById(product.id);
+  }, [prefetchProductById, product?.id]);
+
   useEffect(() => {
     if (!product) {
       return undefined;

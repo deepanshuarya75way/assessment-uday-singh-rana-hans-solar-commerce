@@ -17,10 +17,7 @@ import { ProductDetailBadges } from '@/components/shop/ProductBadges';
 import { ProductVideosSection } from '@/components/shop/ProductVideo';
 import { useEnquiryModal } from '@/context/EnquiryModalContext';
 import { useRecordProductViewMutation } from '@/services/analyticsApi';
-import {
-  useGetPublicProductByIdQuery,
-  useGetPublicProductsQuery,
-} from '@/services/productsApi';
+import { useGetPublicProductByIdQuery } from '@/services/productsApi';
 import {
   formatCurrency,
   getAmountSaved,
@@ -28,7 +25,6 @@ import {
   getProductGstDisplayPricing,
   getProductSubsidyPricing,
 } from '@/utils/format';
-import { pickRelatedProducts } from '@/utils/relatedProducts';
 
 function ProductDetailMediaGallery({ product, images }) {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -83,15 +79,13 @@ function ProductDetailMediaGallery({ product, images }) {
 export default function ProductDetailPage() {
   const { id } = useParams();
   const { openEnquiryModal } = useEnquiryModal();
-  const { data, isLoading, isError } = useGetPublicProductByIdQuery(id);
+  const { data, isLoading, isFetching, isError } = useGetPublicProductByIdQuery(id, {
+    skip: !id,
+  });
   const relatedFromApi = useMemo(
     () => data?.data?.relatedProducts ?? [],
     [data?.data?.relatedProducts],
   );
-  const needsCatalogFallback = !isLoading && !isError && relatedFromApi.length === 0;
-  const { data: catalogData } = useGetPublicProductsQuery(undefined, {
-    skip: !needsCatalogFallback,
-  });
   const [recordProductView] = useRecordProductViewMutation();
   const trackedProductId = useRef('');
 
@@ -115,13 +109,8 @@ export default function ProductDetailPage() {
       return [];
     }
 
-    if (relatedFromApi.length > 0) {
-      return relatedFromApi.filter((item) => item.id !== product.id);
-    }
-
-    const catalog = catalogData?.data?.products ?? [];
-    return pickRelatedProducts(catalog, product);
-  }, [relatedFromApi, catalogData, product]);
+    return relatedFromApi.filter((item) => item.id !== product.id);
+  }, [relatedFromApi, product]);
 
   const images = product?.images ?? [];
   const specifications = product?.specifications
@@ -129,7 +118,7 @@ export default function ProductDetailPage() {
     : [];
   const videoPoster = images[0] || '';
 
-  if (isLoading) {
+  if (isLoading || (isFetching && !product)) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center bg-gray-50 px-4">
         <Loader2 className="h-8 w-8 animate-spin text-solar-600" />

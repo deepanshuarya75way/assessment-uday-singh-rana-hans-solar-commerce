@@ -123,3 +123,9 @@ export const {
   useUpdateProductMutation,
   useDeleteProductMutation,
 } = productsApi;
+
+export const usePrefetchPublicProductById = () =>
+  productsApi.usePrefetch('getPublicProductById');
+
+export const prefetchProductDetailPage = () =>
+  import('@/pages/ProductDetailPage');

@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom';
 import { ProductCardBadges } from '@/components/shop/ProductBadges';
 import { useEnquiryModal } from '@/context/EnquiryModalContext';
 import {
+  prefetchProductDetailPage,
+  usePrefetchPublicProductById,
+} from '@/services/productsApi';
+import {
   formatCurrency,
   getAmountSaved,
   getEffectiveProductPricing,
@@ -18,6 +22,7 @@ export default function ProductCard({
   imagePriority = false,
 }) {
   const { openEnquiryModal } = useEnquiryModal();
+  const prefetchProductById = usePrefetchPublicProductById();
   const imageUrl = product.images?.[0] || '';
   const pricing = getEffectiveProductPricing(product);
   const hasDiscount = pricing.discountPercent > 0;
@@ -46,10 +51,22 @@ export default function ProductCard({
     });
   };
 
+  const prefetchProductDetail = () => {
+    if (!product?.id) {
+      return;
+    }
+
+    prefetchProductDetailPage();
+    prefetchProductById(product.id);
+  };
+
   return (
     <article className={cardClassName}>
       <Link
         to={`/shop/product/${product.id}`}
+        onPointerEnter={prefetchProductDetail}
+        onPointerDown={prefetchProductDetail}
+        onFocus={prefetchProductDetail}
         className="relative isolate block aspect-[4/3] overflow-hidden bg-gray-50"
       >
         {imageUrl ? (
@@ -100,7 +117,14 @@ export default function ProductCard({
               : 'text-lg font-semibold'
           }`}
         >
-          <Link to={`/shop/product/${product.id}`}>{product.name}</Link>
+          <Link
+            to={`/shop/product/${product.id}`}
+            onPointerEnter={prefetchProductDetail}
+            onPointerDown={prefetchProductDetail}
+            onFocus={prefetchProductDetail}
+          >
+            {product.name}
+          </Link>
         </h3>
 
         {keySpecs.length > 0 && (
@@ -149,6 +173,9 @@ export default function ProductCard({
           <div className="mt-auto flex flex-col gap-1.5 pt-2.5 sm:gap-2 sm:pt-3">
             <Link
               to={`/shop/product/${product.id}`}
+              onPointerEnter={prefetchProductDetail}
+              onPointerDown={prefetchProductDetail}
+              onFocus={prefetchProductDetail}
               className="inline-flex min-h-[40px] w-full items-center justify-center gap-1 rounded-lg bg-solar-600 px-2.5 py-2 text-center text-[11px] font-semibold leading-snug text-white transition-all duration-200 hover:bg-solar-700 sm:min-h-[44px] sm:rounded-xl sm:px-3 sm:text-xs"
             >
               <span className="whitespace-nowrap">View Details</span>
@@ -179,6 +206,9 @@ export default function ProductCard({
         ) : (
           <Link
             to={`/shop/product/${product.id}`}
+            onPointerEnter={prefetchProductDetail}
+            onPointerDown={prefetchProductDetail}
+            onFocus={prefetchProductDetail}
             className={`mt-5 inline-flex w-full items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-all duration-200 ${
               inFestivalSection
                 ? 'bg-solar-600 text-white hover:bg-solar-700'

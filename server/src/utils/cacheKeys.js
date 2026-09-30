@@ -7,6 +7,7 @@ export const CACHE_KEYS = {
   PUBLIC_SITE_MEDIA: 'public-site-media',
   ACTIVE_FESTIVAL: 'active-festival',
   PUBLIC_ACTIVE_FESTIVAL: 'public-active-festival',
+  PUBLIC_PRODUCT: 'public-product:',
 };
 
 export const invalidatePublicCatalog = () => {
@@ -18,4 +19,5 @@ export const invalidatePublicCatalog = () => {
 export const invalidatePublicProducts = () => {
   clearMemoryCache(CACHE_KEYS.PUBLIC_FEATURED_PRODUCTS);
   clearMemoryCache(CACHE_KEYS.PUBLIC_ACTIVE_FESTIVAL);
+  clearMemoryCache(CACHE_KEYS.PUBLIC_PRODUCT);
 };
