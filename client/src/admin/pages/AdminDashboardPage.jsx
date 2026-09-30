@@ -10,6 +10,7 @@ import { Link } from 'react-router-dom';
 import StatCard from '@/admin/components/ui/StatCard';
 import PageHeader from '@/admin/components/ui/PageHeader';
 import StatusBadge from '@/admin/components/ui/StatusBadge';
+import VisitorGeographySection from '@/admin/components/VisitorGeographySection';
 import {
   getEnquiryStatusLabel,
   formatDateTime,
@@ -157,6 +158,8 @@ export default function AdminDashboardPage() {
           variant="orange"
         />
       </div>
+
+      <VisitorGeographySection />
 
       <section className="mt-8 rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="flex flex-col gap-3 border-b border-slate-200 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
