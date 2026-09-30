@@ -1,6 +1,7 @@
 import catchAsync from '../utils/catchAsync.js';
 import {
   getVisitorAnalytics,
+  getVisitorGeography,
   recordProductView,
   recordSiteVisit,
 } from '../services/analyticsService.js';
@@ -29,5 +30,18 @@ export const getAdminVisitorAnalyticsHandler = catchAsync(async (_req, res) => {
   res.status(200).json({
     success: true,
     data: { stats },
+  });
+});
+
+export const getAdminVisitorGeographyHandler = catchAsync(async (req, res) => {
+  const geography = await getVisitorGeography({
+    period: req.query.period || 'overall',
+    country: req.query.country,
+    region: req.query.region,
+  });
+
+  res.status(200).json({
+    success: true,
+    data: { geography },
   });
 });
