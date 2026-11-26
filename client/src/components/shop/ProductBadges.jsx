@@ -1,4 +1,6 @@
 import { ShieldCheck, Zap } from 'lucide-react';
+import { getEffectiveProductPricing } from '@/utils/format';
+import { getGstPricing } from '../../utils/format';
 
 export function ProductSaleBadge({
   saleDiscountPercent,
@@ -99,7 +101,8 @@ export function ProductCardBadges({ product }) {
 }
 
 export function ProductDetailBadges({ product }) {
-  const showSale = Boolean(product?.isOnSale && product?.saleDiscountPercent);
+  const pricing = getEffectiveProductPricing(product);
+  const showSale = getGstPricing.discountPercent > 0;
   const showSubsidy = Boolean(product?.isSubsidy || product?.isGovernmentSubsidy);
 
   if (!showSale && !showSubsidy) {
@@ -116,7 +119,8 @@ export function ProductDetailBadges({ product }) {
       )}
       {showSale && (
         <ProductSaleBadge
-          saleDiscountPercent={product.saleDiscountPercent}
+        saleDiscountPercent={pricing.discountPercent}
+          label={pricing.promotionName || 'Sale'}
           size="lg"
         />
       )}

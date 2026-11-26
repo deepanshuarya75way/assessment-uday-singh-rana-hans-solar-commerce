@@ -31,6 +31,7 @@ export default function SubsidyPriceBreakdown({ subsidyPricing }) {
     hasNormalDiscount,
     normalDiscountAmount,
     normalDiscountPercent,
+    PromotionName,
     priceAfterDiscount,
     subsidyDiscount,
     gstEnabled,
@@ -73,7 +74,7 @@ export default function SubsidyPriceBreakdown({ subsidyPricing }) {
         {hasNormalDiscount && (
           <div className="flex items-center justify-between text-sm">
             <span className="flex items-center gap-1.5 font-medium text-slate-600">
-              <span>Product Discount</span>
+              <span>{promotionName || 'Product Discount'} </span>
               <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-amber-200/70">
                 {normalDiscountPercent}% OFF
               </span>

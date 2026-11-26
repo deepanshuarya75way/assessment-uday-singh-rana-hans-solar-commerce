@@ -219,10 +219,15 @@ export default function ProductDetailPage() {
                   hasNormalDiscount={gstDisplayPricing.hasNormalDiscount}
                   normalDiscountAmount={gstDisplayPricing.normalDiscountAmount}
                   normalDiscountPercent={gstDisplayPricing.normalDiscountPercent}
+                  discountLabel ={gstDisplayPricing.discountLabel}
                 />
                 {amountSaved > 0 && (
                   <p className="mt-3 text-xs font-medium text-emerald-600 sm:text-sm">
                     Save {formatCurrency(amountSaved)}
+                    {pricing.promotionName
+                   ? `( ${pricing.promotionName} .
+${pricing.discountPercent}% OFF)`
+: ''}
                   </p>
                 )}
               </div>
@@ -237,6 +242,8 @@ export default function ProductDetailPage() {
                       {formatCurrency(pricing.originalPrice)}
                     </span>
                     <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700 sm:text-sm">
+                      {pricing.promotionName ? 
+                      '${pricing.promotionName}. ' : ''}
                       {pricing.discountPercent}% OFF
                     </span>
                     {amountSaved > 0 && (

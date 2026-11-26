@@ -26,7 +26,47 @@ export const getNormalProductPricing = (product) => {
   };
 };
 
-export const getEffectiveProductPricing = (product) => getNormalProductPricing(product);
+export const isFestivalActive = (festival, now = new Date()) => {
+  if (!festival || !festival.isEnabled) return false;
+  const discount = Number(festival.discountPercent);
+  if (!Number.isFinite(discount) || discount <= 0) return false;
+  const start = festival.startsAt ? new Date(festival.startsAt) : null;
+  const end = festival.endsAt ? new Date(festival.endsAt) : null;
+  if(!start || !end  || Number.isNaN(start.getTime())|| Number.isNaN(end.getTime())){
+    return false;
+  }
+  return now >= start && now <= end;
+};
+
+export const getEffectiveProductPricing = (product) => {
+  const normalPricing = getNormalProductPricing(product);
+  const normalDiscount = normalPricing.discountPercent || 0;
+  const festivalActive = isFestivalActive (product?.festival);
+  const festivalDiscount = festivalActive ?
+  Number(product.festival.discountPercent): 0;
+
+  if(festivalDiscount > 0 && festivalDiscount >= normalDiscount){
+    return {
+      originalPrice: product.price,
+      salePrice: getDiscountedPrice(product.price,festivalDiscount),
+      discountPercent: festivalDiscount,
+      type: 'festival',
+      promotionName: product.festival.name || 'festival offer' ,
+    };
+  }
+
+  if (normalDiscount > 0){
+    return{
+      ...normalPricing,
+      promotionName: 'regular sale',
+    };
+  }
+
+  return{
+    ...normalPricing,
+    promotionName: null,
+  };
+};
 
 export const getAmountSaved = (pricing) =>
   pricing.discountPercent > 0 ? pricing.originalPrice - pricing.salePrice : 0;
@@ -46,30 +86,30 @@ export const getProductGstDisplayPricing = (product) => {
     };
   }
 
-  const normalPricing = getNormalProductPricing(product);
-  const actualPrice = normalPricing.originalPrice;
+  const effectivePricing = getEffectiveProductPricing(product);
+  const actualPrice = effectivePricing.originalPrice;
   const gstPricing = getGstPricing(
     actualPrice,
     product.gstEnabled,
     product.gstPercentage,
   );
   const priceWithGst = gstPricing.finalPrice;
-  const hasNormalDiscount = normalPricing.discountPercent > 0;
+  const hasNormalDiscount = effectivePricing.discountPercent > 0;
   const priceAfterDiscount = hasNormalDiscount
-    ? getDiscountedPrice(priceWithGst, normalPricing.discountPercent)
+    ? getDiscountedPrice(priceWithGst, effectivePricing.discountPercent)
     : priceWithGst;
   const normalDiscountAmount = Math.max(0, priceWithGst - priceAfterDiscount);
 
   return {
     actualPrice,
     normalDiscountAmount: Math.round(normalDiscountAmount),
-    normalDiscountPercent: normalPricing.discountPercent,
+    normalDiscountPercent: effectivePricing.discountPercent,
+    discountLabel: effectivePricing.promotionName || 'productDiscount',
     priceAfterDiscount: Math.round(priceAfterDiscount),
     gstEnabled: gstPricing.gstEnabled,
-    gstPercentage: gstPricing.gstPercentage,
+    gstPersentage: gstPricing.gstPercentage,
     gstAmount: Math.round(gstPricing.gstAmount),
     finalPrice: Math.round(priceAfterDiscount),
-    hasNormalDiscount,
   };
 };
 

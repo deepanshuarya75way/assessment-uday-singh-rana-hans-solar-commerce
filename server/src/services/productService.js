@@ -193,6 +193,10 @@ const formatProduct = (product, { includeCategory = true } = {}) => {
     formatted.festival = {
       id: product.festival.id,
       name: product.festival.name,
+      discountPercent: product.festival.discountPercent ?? null,
+      isEnabled: Boolean(product.festival.isEnabled),
+      startsAt: product.festival.startsAt ?? null,
+      endsAt: product.festival.endsAt ?? null,
     };
   }
 
@@ -269,7 +273,13 @@ export const productInclude = {
     select: { id: true, name: true, slug: true },
   },
   festival: {
-    select: { id: true, name: true },
+    select: { id: true,
+       name: true,
+      discountPercent: true,
+    isEnabled: true,
+  startsAt: true,
+endsAt:true,
+ },
   },
 };
 

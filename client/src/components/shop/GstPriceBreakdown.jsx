@@ -8,6 +8,7 @@ export default function GstPriceBreakdown({
   hasNormalDiscount = false,
   normalDiscountAmount = 0,
   normalDiscountPercent = 0,
+  discountLabel = 'Product Discount',
 }) {
   return (
     <div className="w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.05)]">
@@ -31,7 +32,7 @@ export default function GstPriceBreakdown({
         {hasNormalDiscount && (
           <div className="flex items-center justify-between gap-4 text-sm">
             <span className="flex items-center gap-1.5 font-medium text-slate-600">
-              <span>Product Discount</span>
+              <span>{discountLabel}</span>
               <span className="rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-bold text-amber-700 ring-1 ring-amber-200/70">
                 {normalDiscountPercent}% OFF
               </span>

@@ -82,6 +82,8 @@ function FestivalProductCard({ product, onViewDetails, imagePriority = false }) 
                 {formatCurrency(pricing.originalPrice)}
               </span>
               <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 ring-1 ring-emerald-100">
+                {pricing.promotionName ? 
+                '${pricing.promotionName}.' : ''}
                 {pricing.discountPercent}% OFF
               </span>
             </>
